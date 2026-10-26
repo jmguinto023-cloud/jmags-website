@@ -20,11 +20,17 @@ section{padding:48px 0}h2{color:var(--mint);font-size:1.7rem;margin-top:0}
 .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;list-style:none;padding:0}
 .card{background:var(--indigo-dark);border:1px solid rgba(94,230,181,.3);border-radius:12px;padding:20px}.card h3{margin:0 0 6px;color:var(--mint)}
 footer{background:var(--indigo-dark);border-top:2px solid var(--mint);padding:28px 0;font-size:.95rem}footer p{margin:4px 0}
+.rec-group{margin:28px 0 8px;font-size:1.2rem;color:var(--text)}
+.rec .card{display:flex;flex-direction:column}.rec .tip{flex:1;margin:0 0 14px;font-size:.95rem}
+.buy{display:flex;flex-wrap:wrap;gap:8px}.buy .btn{padding:9px 16px;font-size:.92rem;text-align:center;flex:1 1 auto}
+.btn.alt{background:transparent;color:var(--mint);border:2px solid var(--mint)}
+.disclose{font-size:.9rem;opacity:.85;margin:0 0 8px}
+@media(max-width:520px){nav a{margin-left:0;margin-right:14px}.buy .btn{flex:1 1 100%}}
 </style>
 </head>
 <body>
 <header><div class="wrap"><span class="brand">JMAG's Appliances</span>
-<nav><a href="#services">Services</a><a href="#about">About</a><a href="#contact">Contact</a></nav></div></header>
+<nav><a href="#services">Services</a><a href="#recommended">Recommended</a><a href="#about">About</a><a href="#contact">Contact</a></nav></div></header>
 <main>
 <div class="hero"><div class="wrap">
 <h1>JMAG's Appliances</h1>
@@ -38,6 +44,29 @@ footer{background:var(--indigo-dark);border-top:2px solid var(--mint);padding:28
 <li class="card"><h3>LCD Modification</h3>Panel modification for TVs with damaged or faulty display panels.</li>
 <li class="card"><h3>Appliance Repair</h3>Repair of common home appliances by our technicians.</li>
 </ul></div></section>
+<section id="recommended" class="rec"><div class="wrap"><h2>Recommended Products</h2>
+<p>Mga produktong nire-recommend ng aming technicians, galing sa official at Mall stores.</p>
+<p class="disclose">Affiliate links po ito — may maliit kaming commission, walang dagdag sa presyo ninyo.</p>
+<h3 class="rec-group">TVs</h3>
+<ul class="grid">
+<li class="card"><h3>Samsung 43" QLED Smart TV</h3><p class="tip">Official warranty po ito, at maganda ang picture — sulit para sa sala.</p><div class="buy"><a class="btn" href="https://s.shopee.ph/9fLxoqZ7zD" rel="sponsored noopener" target="_blank">Buy on Shopee</a></div></li>
+<li class="card"><h3>TCL Google TV</h3><p class="tip">Google TV na po agad, may YouTube at Netflix — at 2-year warranty sa official store.</p><div class="buy"><a class="btn" href="https://s.shopee.ph/8pmqpJcIg4" rel="sponsored noopener" target="_blank">Buy on Shopee</a><a class="btn alt" href="https://s.lazada.com.ph/s.ZR1xyo?t=p-i15eHqk-s3cea2V" rel="sponsored noopener" target="_blank">Buy on Lazada</a></div></li>
+<li class="card"><h3>Coocaa Google TV</h3><p class="tip">Budget-friendly po pero official store at may 2-year warranty — swak sa kwarto o sala.</p><div class="buy"><a class="btn" href="https://s.shopee.ph/8fTQd0cw13" rel="sponsored noopener" target="_blank">Buy on Shopee</a><a class="btn alt" href="https://s.lazada.com.ph/s.ZR1xyR?t=p-i5g0zRN-sXfDHYZ" rel="sponsored noopener" target="_blank">Buy on Lazada</a></div></li>
+</ul>
+<h3 class="rec-group">AVRs &amp; Voltage Protection</h3>
+<ul class="grid">
+<li class="card"><h3>CyberPower 1500VA AVR</h3><p class="tip">Madalas po kaming mag-repair ng power board na nasira sa brownout — AVR lang, protektado na ang TV ninyo.</p><div class="buy"><a class="btn" href="https://s.shopee.ph/906H1cbfL9" rel="sponsored noopener" target="_blank">Buy on Shopee</a><a class="btn alt" href="https://s.lazada.com.ph/s.ZR1Fet?t=p-i2TnSrw-sVHr1Xa" rel="sponsored noopener" target="_blank">Buy on Lazada</a></div></li>
+<li class="card"><h3>Akari Servo AVR</h3><p class="tip">Servo type po ito, steady ang boltahe kahit pabago-bago ang kuryente — pang-TV at appliances.</p><div class="buy"><a class="btn" href="https://s.shopee.ph/9APhDvb20A" rel="sponsored noopener" target="_blank">Buy on Shopee</a><a class="btn alt" href="https://s.lazada.com.ph/s.ZR1xvD?t=p-i2aWmxF-sBmKWbU" rel="sponsored noopener" target="_blank">Buy on Lazada</a></div></li>
+</ul>
+<h3 class="rec-group">Accessories</h3>
+<ul class="grid">
+<li class="card"><h3>Surge-Protected Extension Cord</h3><p class="tip">Huwag po basta extension — may surge protection dapat para hindi tamaan ng spike ang TV.</p><div class="buy"><a class="btn" href="https://s.shopee.ph/9fLxjeOgPX" rel="sponsored noopener" target="_blank">Buy on Shopee</a><a class="btn alt" href="https://s.lazada.com.ph/s.ZR1uuS?t=p-i5oRtl5-sYgHBu0" rel="sponsored noopener" target="_blank">Buy on Lazada</a></div></li>
+<li class="card"><h3>4K Android TV Box</h3><p class="tip">Hindi pa smart ang TV ninyo? Isaksak lang po sa HDMI, may YouTube at Netflix na — hindi na kailangan bumili ng bago.</p><div class="buy"><a class="btn" href="https://s.shopee.ph/7Ky2xMotDE" rel="sponsored noopener" target="_blank">Buy on Shopee</a><a class="btn alt" href="https://s.lazada.com.ph/s.ZR1uuo?t=p-i5rwzGU-sZACLQV" rel="sponsored noopener" target="_blank">Buy on Lazada</a></div></li>
+<li class="card"><h3>TV Wall Mount</h3><p class="tip">Matibay na bracket po ang kailangan para ligtas ang TV sa pader — iwas bagsak at basag na panel.</p><div class="buy"><a class="btn" href="https://s.shopee.ph/50a8B6OJiD" rel="sponsored noopener" target="_blank">Buy on Shopee</a><a class="btn alt" href="https://s.lazada.com.ph/s.ZR1uuz?t=p-i4uRLah-sS3dSCY" rel="sponsored noopener" target="_blank">Buy on Lazada</a></div></li>
+<li class="card"><h3>HDMI 2.1 Cable</h3><p class="tip">Maraming "walang signal" na tawag po ay sira lang na cable — HDMI 2.1 para malinaw at stable ang picture.</p><div class="buy"><a class="btn" href="https://s.shopee.ph/9fLxjetH5a" rel="sponsored noopener" target="_blank">Buy on Shopee</a><a class="btn alt" href="https://s.lazada.com.ph/s.ZR1uvo?t=p-i4OLZLq-sOvmrIP" rel="sponsored noopener" target="_blank">Buy on Lazada</a></div></li>
+<li class="card"><h3>Sembrandt SB750 Soundbar</h3><p class="tip">Manipis ang speaker ng mga bagong TV po — soundbar ang pinakamadaling upgrade sa tunog.</p><div class="buy"><a class="btn" href="https://s.shopee.ph/8fTQXpA8wW" rel="sponsored noopener" target="_blank">Buy on Shopee</a><a class="btn alt" href="https://s.lazada.com.ph/s.ZR1uvA?t=p-i48dPGQ-sLzqmaY" rel="sponsored noopener" target="_blank">Buy on Lazada</a></div></li>
+</ul>
+</div></section>
 <section id="about"><div class="wrap"><h2>About Us</h2>
 <p>JMAG ELECTRONIC SERVICE CENTER (JMAG's Appliances) is a DTI-registered electronics repair business based in San Pablo City, Laguna. We provide home service TV and appliance repair across Cavite, Laguna and Batangas, so customers don't need to haul their units to a shop.</p>
 </div></section>
