@@ -148,7 +148,8 @@ h1 em{filter:drop-shadow(0 0 10px rgba(94,234,212,.8)) drop-shadow(0 0 24px rgba
 <a class="hcall" href="#recommended">Shop</a></div></header>
 <main>
 <div class="hero"><span class="blob bl1"></span><span class="blob bl2"></span><span class="blob bl3"></span><div class="w">
-<h1>These are the products we <em>recommend and trust</em></h1>
+<h1>These are the products we <em>recommend and trust</em></h1><div id="vc" style="display:none;justify-content:center;margin:14px auto 0"><span style="display:inline-flex;align-items:center;gap:8px;padding:7px 14px;border-radius:999px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);color:#fff;font-size:13px;font-weight:600"><span style="width:8px;height:8px;border-radius:50%;background:#5eead4;box-shadow:0 0 8px #5eead4"></span><span id="vcn"></span> visits since Oct 2026</span></div>
+<script>(function(){var b="https://abacus.jasoncameron.dev/",n="jmagsappliances-tech/visits",u=sessionStorage.getItem("jv")?"get/":"hit/";fetch(b+u+n).then(function(r){return r.json()}).then(function(d){sessionStorage.setItem("jv",1);if(d&&d.value>=50){document.getElementById("vcn").textContent=d.value.toLocaleString();document.getElementById("vc").style.display="flex"}}).catch(function(){})})();</script>
 <span class="birpill">✅ DTI &amp; BIR Registered Business</span>
 <p>Hand-picked po ng JMAG's Appliances — galing lang sa official at Mall stores na may warranty.</p>
 <a class="btn bp" href="#recommended">Shop now</a>
