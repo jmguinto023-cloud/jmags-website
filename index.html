@@ -9,7 +9,13 @@
 <!-- Meta domain verification: paste the tag from Meta Business Settings > Brand safety > Domains here, e.g.
 <meta name="facebook-domain-verification" content="YOUR_CODE_FROM_META" />
 -->
-<!-- Meta Pixel placeholder: paste the Meta Pixel base code here once the Pixel ID is ready (none yet) -->
+<!-- Meta Pixel Code -->
+<script>
+!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');
+fbq('init','2215181412709211');fbq('track','PageView');
+</script>
+<noscript><img height="1" width="1" style="display:none" src="https://www.facebook.com/tr?id=2215181412709211&ev=PageView&noscript=1" alt=""></noscript>
+<!-- End Meta Pixel Code -->
 <style>
 .birpill{display:inline-block;margin:.6rem 0 .8rem;padding:.35rem .85rem;border-radius:999px;background:linear-gradient(90deg,var(--mint),var(--blue));color:var(--ind);font-weight:700;font-size:.85rem}.reg{opacity:.85;font-size:.85rem;margin:.3rem 0}
 :root{--in:#2b2a6b;--ind:#1d1c4d;--mint:#5ee6b5;--coral:#ff7a6b;--blue:#4da3ff;--violet:#9b7bff;--bg:#f6f7fb;--tx:#1d1c4d;--mu:#5b5d7a}
@@ -214,6 +220,19 @@ function st(){if(!rm){clearInterval(tm);tm=setInterval(nx,3500)}}function sp(){c
 document.querySelector('.cp2').onclick=function(){go(i-1);rs()};document.querySelector('.cn2').onclick=function(){nx();rs()};
 var c=document.querySelector('.car');c.addEventListener('mouseenter',sp);c.addEventListener('mouseleave',st);t.addEventListener('touchstart',sp,{passive:true});t.addEventListener('touchend',function(){setTimeout(st,2500)},{passive:true});
 mark();st();})();
+</script>
+<script>
+(function(){var d=document;function fb(){if(typeof window.fbq==='function'){try{window.fbq.apply(null,arguments)}catch(e){}}}
+var CAT={tv:'TVs',avr:'AVRs',ups:'UPS',remotes:'TV Remotes',brackets:'TV Brackets',sticks:'Smart TV Sticks',acc:'Accessories'};
+function catOf(el){if(el.classList.contains('sl')){var t=el.querySelector('.tag');return t?(CAT[(t.getAttribute('href')||'').slice(1)]||t.textContent.trim()):''}
+var ul=el.closest('ul.pg'),h=ul&&ul.previousElementSibling;return h&&h.id?(CAT[h.id]||''):''}
+function nameOf(el){var h=el&&el.querySelector('h3');return h?h.textContent.trim():''}
+var cards=d.querySelectorAll('li.pc,li.sl');
+if('IntersectionObserver' in window){var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){io.unobserve(e.target);fb('track','ViewContent',{content_name:nameOf(e.target),content_category:catOf(e.target)})}})},{threshold:0.6});cards.forEach(function(c){io.observe(c)})}
+d.addEventListener('click',function(e){var a=e.target.closest&&e.target.closest('a[href]');if(!a)return;var h=a.href,host='';try{host=new URL(h).hostname}catch(x){return}
+var st=/(^|\.)(shopee\.ph|shope\.ee)$/.test(host)||/shopee/.test(host)?'Shopee':(/lazada/.test(host)?'Lazada':'');if(!st)return;
+fb('trackCustom','AffiliateClick',{content_name:nameOf(a.closest('li.pc,li.sl')),store:st,destination_url:h})},true);
+})();
 </script>
 </body>
 </html>
