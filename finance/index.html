@@ -39,7 +39,7 @@ function sum(a,k){return a.reduce((v,x)=>v+n(x[k]),0)}
 function banner(message,kind){return '<div class="banner '+(kind||"")+'">'+message+'</div>'}
 function cell(x,cls){return '<td'+(cls?' class="'+cls+'"':'')+'>'+x+'</td>'}
 function table(head,body){return '<div class="scroll"><table><thead><tr>'+head.map(x=>'<th>'+h(x)+'</th>').join("")+'</tr></thead><tbody>'+body.join("")+'</tbody></table></div>'}
-async function check(){const auth=await db.auth.getUser();if(auth.error)throw auth.error;const user=auth.data?.user||null;state.user=user;if(recoveryMode)return;if(!user){login();return}
+async function check(){const auth=await db.auth.getUser();const user=auth.data?.user||null;state.user=user;if(recoveryMode)return;if(!user){login();return}if(auth.error)throw auth.error;
 const {data,error}=await db.from("profiles").select("role,name,branch").eq("id",user.id).maybeSingle();
 state.profile=data||{role:"pending",name:"",branch:""};identity.innerHTML=h(user.email||"")+" &nbsp; • &nbsp; "+h(role())+' &nbsp; <button class="smallbtn" id="signout">Sign out</button>';
 if(error){root.innerHTML=banner(h(error.message),"bad");return}
