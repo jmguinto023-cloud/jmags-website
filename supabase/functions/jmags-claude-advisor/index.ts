@@ -64,11 +64,15 @@ Deno.serve(async (req: Request) => {
       return reply(req, 400, { error: "Enter a question of up to 500 characters." });
     }
 
-    const key = Deno.env.get("ANTHROPIC_API_KEY")?.trim();
+    // Encrypted Vault credential, readable only by the Supabase server role.
+    // Keep environment-variable compatibility for existing installations.
+    const stored = await ctx.supabaseAdmin.rpc("jmags_claude_runtime_key");
+    const key = (typeof stored.data === "string" ? stored.data.trim() : "") ||
+      (Deno.env.get("ANTHROPIC_API_KEY")?.trim() ?? "");
     if (!key) {
       return reply(req, 503, {
         code: "CLAUDE_NOT_CONFIGURED",
-        error: "Claude is installed but not activated. The JMAGS owner must add ANTHROPIC_API_KEY under Supabase Edge Function Secrets.",
+        error: "Claude needs a new API key. Use Activate Claude in this Command Center to save one securely.",
       });
     }
 
