@@ -23,6 +23,27 @@
 .ad-health-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;flex-wrap:wrap}
 .ad-health-freshness{margin-top:5px;font-size:12px;color:#697990}
 .ad-health-empty{padding:18px;border:1px dashed #c8d5e3;border-radius:12px;color:#5c6b80;background:#f9fbfe}
+.ad-health-primary{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0}
+.ad-health-primary>div{padding:12px 10px;border:1px solid #cddaea;border-radius:10px;background:#f6f9ff;font-size:12px;line-height:1.4;color:#526683;min-width:0}
+.ad-health-primary strong{display:block;font-size:21px;line-height:1.3;color:#112b4c;margin-top:5px;overflow-wrap:anywhere}
+.ad-health-secondary{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0}
+.ad-health-secondary span{font-size:12px;color:#56687d}
+.ad-health-secondary strong{display:block;font-size:14px;color:#26364b;margin-top:3px}
+.ad-health-creative{display:inline-block;font-size:11px;font-weight:700;background:#e7f2ff;color:#165ba7;border:1px solid #bdd9fc;border-radius:100px;padding:5px 9px;margin-top:8px}
+.ad-health-strategy{margin-top:13px;border-top:1px solid #dce4ee;padding-top:11px;font-size:12px;color:#4d6179}
+.ad-health-strategy summary{cursor:pointer;font-weight:700;color:#244976}
+.ad-health-strategy ul{padding-left:17px;margin:6px 0}
+.ad-health-strategy li{margin-bottom:6px;white-space:pre-wrap;overflow-wrap:anywhere}
+.ad-health-log th,.ad-health-log td{vertical-align:top}
+@media(prefers-color-scheme:dark){
+ .ad-health-card{background:#222328;border-color:#484e58;color:#e5e7eb}
+ .ad-health-card.green{background:#182d24}.ad-health-card.yellow{background:#312b1a}.ad-health-card.red{background:#301d22}
+ .ad-health-primary>div{background:#242d39;border-color:#42526b;color:#bcc7d7}
+ .ad-health-primary strong{color:#f5f8ff}
+ .ad-health-secondary span,.ad-health-secondary strong,.ad-health-card .health-meta,.ad-health-strategy{color:#bbc5d5}
+ .ad-health-strategy{border-color:#484e58}.ad-health-strategy summary{color:#b6d9ff}
+ .ad-health-creative{background:#133555;color:#c3e0ff;border-color:#32628c}
+}
 </style>
 </head><body>
 <header class="top"><div><div class="logo">JMAGS <span>COMMAND CENTER</span></div><div class="small">Appliances • San Pablo & Cavite • Finance Automation</div></div><div id="identity" class="small"></div></header>
@@ -35,7 +56,7 @@ const URL_DB="https://fhjarnogglakehaztbbj.supabase.co", PUBLIC_KEY="sb_publisha
 const root=document.getElementById("root"), identity=document.getElementById("identity");
 if(!window.supabase){root.innerHTML='<div class="banner bad">Supabase client could not load. Check your connection or script blocker.</div>';return;}
 const db=window.supabase.createClient(URL_DB,PUBLIC_KEY,{auth:{persistSession:true,autoRefreshToken:true}});
-const state={user:null,profile:null,tab:"Overview",branch:"all",month:new Date().getDate()<=7?monthOffset(-1):monthOffset(0),jobs:[],expenses:[],ads:[],ledger:[],monthly:[],working:false,claudeQuestion:"",claudeAnswer:"",claudeMessage:"",claudeBrief:"",claudeHelpUrl:"",claudeConfigured:null,claudeSetupError:"",adHealthToday:[],adHealthHistory:[],adHealthLoaded:false,adHealthLoading:false,adHealthError:"",adHealthFetchedAt:""};
+const state={user:null,profile:null,tab:"Overview",branch:"all",month:new Date().getDate()<=7?monthOffset(-1):monthOffset(0),jobs:[],expenses:[],ads:[],ledger:[],monthly:[],working:false,claudeQuestion:"",claudeAnswer:"",claudeMessage:"",claudeBrief:"",claudeHelpUrl:"",claudeConfigured:null,claudeSetupError:"",adHealthToday:[],adHealthHistory:[],adHealthLoaded:false,adHealthLoading:false,adHealthError:"",adHealthFetchedAt:"",adHealthStrategy:[],adHealthStrategyError:""};
 let recoveryMode=false;
 function monthOffset(n){const d=new Date(); d.setDate(1);d.setMonth(d.getMonth()+n);return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")}
 function h(v){return String(v??"").replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]})}
@@ -209,60 +230,91 @@ function adStatus(value){
 function adAction(value){
  return {"none":"No change","paused":"Paused","paused_and_replaced":"Paused + replaced","scaled_up":"Scaled up"}[value]||String(value||"—");
 }
+
+function adMessageCount(value){
+ if(value==null||value==="")return "—";
+ const amount=Number(value);
+ return Number.isFinite(amount)?amount.toLocaleString("en-PH",{maximumFractionDigits:0}):"—";
+}
+function adCreativeTag(r){
+ return r.creative_refreshed===true?'<span class="ad-health-creative">↻ Creative refreshed today</span>':"";
+}
+function adCreativeCell(r){
+ return r.creative_refreshed===true?'<span class="ad-health-creative">↻ Yes</span>':"—";
+}
+function adStrategyDetail(record){
+ if(!record)return "";
+ const headlines=Array.isArray(record.recent_headlines)?record.recent_headlines.slice(-5):[];
+ const copies=Array.isArray(record.recent_ad_copy)?record.recent_ad_copy.slice(-5):[];
+ let html='<details class="ad-health-strategy"><summary>Recent strategy & ad copy</summary>';
+ html+='<p>Last scaled: '+h(adTime(record.last_scaled_at))+'<br>Last creative refresh: '+h(adTime(record.last_creative_refresh_at))+'</p>';
+ html+='<strong>Recent headlines</strong>';
+ html+=headlines.length?'<ul>'+headlines.map(x=>'<li>'+h(x)+'</li>').join("")+'</ul>':'<p>None recorded yet.</p>';
+ html+='<strong>Recent ad copy</strong>';
+ html+=copies.length?'<ul>'+copies.map(x=>'<li>'+h(x)+'</li>').join("")+'</ul>':'<p>None recorded yet.</p>';
+ return html+'</details>';
+}
 function adHealthPanel(){
  const today=manilaToday();
  const localHour=Number(new Intl.DateTimeFormat("en-GB",{timeZone:"Asia/Manila",hour:"2-digit",hourCycle:"h23"}).format(new Date()));
- let out='<section class="panel" id="ad-health-panel"><div class="ad-health-head"><div><h2>Cavite Ad Health</h2><p class="hint">Read-only Meta Ads guardrail status from Claude’s separate monitoring system. Today is '+h(today)+' in Manila. This panel never pauses, replaces or scales an ad.</p></div><button class="secondary" type="button" id="refreshAdHealth"'+(state.adHealthLoading?" disabled":"")+'>'+(state.adHealthLoading?"Refreshing…":"↻ Refresh checks")+'</button></div>';
+ let out='<section class="panel" id="ad-health-panel"><div class="ad-health-head"><div><h2>Cavite Ad Health</h2><p class="hint">Messaging-efficiency monitoring from the separate Cavite Meta Ads guardrail system. Status colors come from its own checks, not from the dashboard. Today: '+h(today)+' (Manila). This panel is read-only.</p></div><button class="secondary" type="button" id="refreshAdHealth"'+(state.adHealthLoading?" disabled":"")+'>'+(state.adHealthLoading?"Refreshing…":"↻ Refresh checks")+'</button></div>';
  if(state.adHealthError)out+=banner("Unable to load the ad monitoring log: "+h(state.adHealthError),"bad");
  if(!state.adHealthLoaded&&!state.adHealthError)out+='<p class="hint">Loading Cavite monitoring checks…</p>';
  const latest=new Map();
- for(const row of state.adHealthToday){
-   const key=String(row.campaign_id||row.campaign||"");
-   const previous=latest.get(key);
-   if(!previous||String(row.checked_at)>String(previous.checked_at))latest.set(key,row);
+ for(const r of state.adHealthToday){
+   const id=String(r.campaign_id||r.campaign||"");
+   const prior=latest.get(id);
+   if(!prior||String(r.checked_at)>String(prior.checked_at))latest.set(id,r);
  }
- const order={red:0,yellow:1,green:2};
- const cards=[...latest.values()].sort((a,b)=>(order[a.status]??3)-(order[b.status]??3)||String(a.campaign).localeCompare(String(b.campaign)));
+ const stateById=new Map();
+ for(const record of state.adHealthStrategy){
+   if(record.campaign_id)stateById.set(String(record.campaign_id),record);
+ }
+ const rank={red:0,yellow:1,green:2};
+ const cards=[...latest.values()].sort((a,b)=>(rank[a.status]??3)-(rank[b.status]??3)||String(a.campaign).localeCompare(String(b.campaign)));
  if(state.adHealthLoaded&&!cards.length){
    if(localHour>=19)out+=banner("Monitoring warning: No Cavite ad-health checks have been recorded today, even though 5 AM, 10 AM and 6 PM runs were expected. The automatic ad monitor is NOT VERIFIED as running; check the external scheduler before relying on campaign changes.","warn");
    else out+='<div class="ad-health-empty">No Cavite guardrail checks logged for today yet. The status is <strong>not yet reported</strong> — it does not mean every campaign is healthy. Refresh after a scheduled check.</div>';
  }else if(cards.length){
-   const counts={red:0,yellow:0,green:0};for(const row of cards){if(counts[row.status]!==undefined)counts[row.status]++;}
+   const counts={red:0,yellow:0,green:0};for(const r of cards)if(counts[r.status]!==undefined)counts[r.status]++;
    out+='<p class="hint">Latest check per campaign: '+cards.length+' · Red '+counts.red+' · Yellow '+counts.yellow+' · Green '+counts.green+'</p><div class="ad-health-cards">';
-   for(const row of cards){
-     const st=["red","yellow","green"].includes(row.status)?row.status:"";
-     out+='<article class="ad-health-card '+st+'"><div class="ad-health-head"><div class="health-title">'+h(row.campaign||"Unnamed campaign")+'</div>'+adStatus(row.status)+'</div>';
-     out+='<div class="health-metrics"><div>CPC today<strong>'+adMoney(row.cpc_today)+'</strong></div><div>14-day avg CPC<strong>'+adMoney(row.account_avg_cpc_14d)+'</strong></div><div>Spend today<strong>'+adMoney(row.spend_today)+'</strong></div><div>Action<strong>'+h(adAction(row.action_taken))+'</strong></div></div>';
-     out+='<div class="health-meta">Campaign ID: '+h(row.campaign_id||"—")+'<div>Checked: '+h(adTime(row.checked_at))+' PH time</div>';
-     if(row.replacement_campaign_id)out+='<div>Replacement ID: '+h(row.replacement_campaign_id)+'</div>';
-     out+='</div></article>';
+   for(const r of cards){
+     const st=["red","yellow","green"].includes(r.status)?r.status:"";
+     out+='<article class="ad-health-card '+st+'"><div class="ad-health-head"><div class="health-title">'+h(r.campaign||"Unnamed campaign")+'</div>'+adStatus(r.status)+'</div>';
+     out+='<div class="ad-health-primary"><div>Messages today<strong>'+adMessageCount(r.messages_today)+'</strong></div><div>Cost / message today<strong>'+adMoney(r.cost_per_message_today)+'</strong></div></div>';
+     out+='<div class="ad-health-secondary"><span>14-day avg cost / message<strong>'+adMoney(r.account_avg_cost_per_message_14d)+'</strong></span><span>Spend today<strong>'+adMoney(r.spend_today)+'</strong></span><span>CPC today<strong>'+adMoney(r.cpc_today)+'</strong></span><span>14-day avg CPC<strong>'+adMoney(r.account_avg_cpc_14d)+'</strong></span></div>';
+     out+='<div class="health-meta">Action: <strong>'+h(adAction(r.action_taken))+'</strong><div>'+adCreativeTag(r)+'</div><div>Campaign ID: '+h(r.campaign_id||"—")+'</div><div>Checked: '+h(adTime(r.checked_at))+' PH time</div>';
+     if(r.replacement_campaign_id)out+='<div>Replacement ID: '+h(r.replacement_campaign_id)+'</div>';
+     out+='</div>'+adStrategyDetail(stateById.get(String(r.campaign_id||"")))+'</article>';
    }
    out+='</div>';
  }
  out+='<div class="sectiontitle"><h3>Automated action history</h3><span class="hint">Most recent 300 checks · Cavite only</span></div>';
- const entries=state.adHealthHistory;
- if(state.adHealthLoaded&&!entries.length)out+='<div class="ad-health-empty">No automated decisions have been logged yet. Once the monitor runs, entries will appear here.</div>';
- else if(entries.length){
-   const trs=entries.map(r=>'<tr>'+cell(h(r.check_date||"—"))+cell(h(r.campaign||"—"))+cell(adStatus(r.status))+cell(adMoney(r.cpc_today),"right")+cell(adMoney(r.account_avg_cpc_14d),"right")+cell(adMoney(r.spend_today),"right")+cell(h(adAction(r.action_taken)))+cell(h(r.replacement_campaign_id||"—"))+cell(h(adTime(r.checked_at)))+'</tr>');
-   out+=table(["Date","Campaign","Status","CPC today","14d avg CPC","Spend today","Action taken","Replacement campaign ID","Checked (PH)"],trs);
+ if(state.adHealthLoaded&&!state.adHealthHistory.length)out+='<div class="ad-health-empty">No automated decisions have been logged yet. Once the monitor runs, entries will appear here.</div>';
+ else if(state.adHealthHistory.length){
+   const rows=state.adHealthHistory.map(r=>'<tr>'+cell(h(r.check_date||"—"))+cell(h(r.campaign||"—"))+cell(adStatus(r.status))+cell(adMessageCount(r.messages_today),"right")+cell(adMoney(r.cost_per_message_today),"right")+cell(adMoney(r.account_avg_cost_per_message_14d),"right")+cell(adMoney(r.spend_today),"right")+cell(adMoney(r.cpc_today),"right")+cell(adMoney(r.account_avg_cpc_14d),"right")+cell(h(adAction(r.action_taken)))+cell(adCreativeCell(r))+cell(h(r.replacement_campaign_id||"—"))+cell(h(adTime(r.checked_at)))+'</tr>');
+   out+='<div class="ad-health-log">'+table(["Date","Campaign","Status","Messages today","Cost / msg today","14d avg cost / msg","Spend today","CPC today","14d avg CPC","Action taken","Creative refreshed","Replacement ID","Checked (PH)"],rows)+'</div>';
  }
+ if(state.adHealthStrategyError)out+='<p class="hint">Optional creative history is unavailable: '+h(state.adHealthStrategyError)+'</p>';
  if(state.adHealthFetchedAt)out+='<p class="ad-health-freshness">Data refreshed '+h(adTime(state.adHealthFetchedAt))+' Philippine time. Dashboard updates approximately every minute while open.</p>';
- out+='<p class="hint">Status colors are reported by the external monitor. A red status is not proof that an action succeeded; review the logged action and verify critical changes in Meta Ads Manager.</p></section>';
+ out+='<p class="hint"><strong>Action meanings:</strong> Steady = no change. Paused + replaced = a capped-budget duplicate using the same creative/post. Scaled up = reported 5% budget increase (maximum weekly). A creative refresh is a separate action. Always verify actual account changes in Meta Ads Manager.</p></section>';
  return out;
 }
 async function loadAdHealth(){
  if(state.adHealthLoading||!state.user||!admin())return;
  state.adHealthLoading=true;
  const today=manilaToday();
+ const columns="check_date,branch,campaign,campaign_id,status,cpc_today,account_avg_cpc_14d,spend_today,messages_today,cost_per_message_today,account_avg_cost_per_message_14d,action_taken,creative_refreshed,replacement_campaign_id,checked_at";
  try{
-   const [todayResult,historyResult]=await Promise.all([
+   const [todayResult,historyResult,strategyResult]=await Promise.all([
      db.from("jmags_ad_health")
-       .select("check_date,branch,campaign,campaign_id,status,cpc_today,account_avg_cpc_14d,spend_today,action_taken,replacement_campaign_id,checked_at")
-       .eq("branch","cavite").eq("check_date",today)
+       .select(columns).eq("branch","cavite").eq("check_date",today)
        .order("checked_at",{ascending:false}).limit(300),
      db.from("jmags_ad_health")
-       .select("check_date,branch,campaign,campaign_id,status,cpc_today,account_avg_cpc_14d,spend_today,action_taken,replacement_campaign_id,checked_at")
-       .eq("branch","cavite").order("check_date",{ascending:false}).order("checked_at",{ascending:false}).order("campaign",{ascending:true}).limit(300)
+       .select(columns).eq("branch","cavite").order("check_date",{ascending:false}).order("checked_at",{ascending:false}).order("campaign",{ascending:true}).limit(300),
+     db.from("jmags_ad_strategy_state")
+       .select("campaign_id,campaign,branch,last_scaled_at,last_creative_refresh_at,recent_headlines,recent_ad_copy")
+       .eq("branch","cavite").limit(300)
    ]);
    if(todayResult.error||historyResult.error){
      state.adHealthError=[todayResult.error?.message,historyResult.error?.message].filter(Boolean).join("; ");
@@ -273,6 +325,8 @@ async function loadAdHealth(){
      state.adHealthError="";
      state.adHealthFetchedAt=new Date().toISOString();
    }
+   if(strategyResult.error)state.adHealthStrategyError=strategyResult.error.message;
+   else{state.adHealthStrategy=strategyResult.data||[];state.adHealthStrategyError="";}
  }catch(err){state.adHealthError=String(err?.message||"Ad monitoring data unavailable");}
  finally{state.adHealthLoading=false;if(state.tab==="Ads")render();}
 }
