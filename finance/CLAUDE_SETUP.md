@@ -1,32 +1,41 @@
-# JMAGS Claude Pro mode – active
+# JMAGS Claude Chat – deployment and billing mode
 
-The JMAGS owner selected **Option 1: Claude Pro chat**. The Command Center uses a **manual copy-and-paste handoff** to Claude Pro, with **no additional Anthropic API requests or charges from JMAGS**.
+## Current setup
 
-## How to use
+The JMAGS Command Center now has a **Chat with Claude** interface at [jmagsappliances.tech/finance](https://jmagsappliances.tech/finance/) → **Claude AI**. It includes a message field, Send button, conversation bubbles, error messages and room for several turns of conversation.
 
-1. Open [JMAGS Command Center](https://jmagsappliances.tech/finance/) and sign in as the approved owner.
-2. Select the reporting month and branch, then open **Claude AI**.
-3. Choose or type a question.
-4. Tap **Copy JMAGS financial brief**. If copying is blocked, long-press and copy from the visible preview.
-5. Tap **Open Claude Pro chat**, then paste and send the summary in your own Claude Pro chat.
+**Important: DIRECT CHAT IS NOT ACTIVATED.** The owner selected Claude Pro with no extra API charges. Claude Pro is a separate product from Anthropic API access. To avoid billable calls, TWO independent switches remain off:
 
-The copied brief contains only summarized verified revenue, direct costs, overhead, and top advertising campaign totals from the selected month/branch, with explicit warnings about incomplete data. No client names, phone numbers, individual job details or API keys are included.
+- Client: `CLAUDE_DIRECT_ENABLED = false` in `finance/index.html`.
+- Server: `JMAGS_PAID_API_ENABLED = false` in `supabase/functions/jmags-claude-advisor/index.ts`.
 
-## Billing safeguards
+The server returns HTTP 409 if an old or modified browser attempts a direct request. Neither switch should be enabled unless the JMAGS owner explicitly approves paid API access and there is a funded Anthropic Console API account.
 
-- JMAGS Finance website contains **no paid Claude API invocation or activation buttons** in the Claude Pro view.
-- The separate Supabase `jmags-claude-advisor` Edge Function rejects billable API requests with HTTP 409 `JMAGS_CLAUDE_PRO_ONLY`. This also protects against older browser-cached pages.
-- Your saved encrypted API key has **not been deleted or used for this mode**. If any prior API key was shared in chat, revoke it in Anthropic Console.
-- Claude Pro plan usage limits still apply, but the manual workflow does not incur separate Claude API charges.
+## How to use now without extra API charges
 
-## Limits and data integrity
+Open the **Claude AI** tab and expand **Continue using Claude Pro without API charges**. The existing secure summary export and Claude Pro website link are available there. Copying the summary into Claude Pro remains manual.
 
-- Historical October 2026 sales/expenses were not yet imported into the new cloud finance ledger. Imported Cavite ad data does not establish actual profit or return on ad spend.
-- If the browser blocks clipboard access, copy from the manual preview text area.
-- No interaction with the JMAGS Messenger bot. It is unchanged.
+## To enable embedded real Claude answers later
 
-## Components
+1. In [Claude Console Billing](https://platform.claude.com/settings/billing), fund API credits and disable auto-reload if limiting spending is important. Claude Pro does not fund the API.
+2. Get the owner's explicit approval to enable billable API calls.
+3. Verify that the saved, encrypted Anthropic API key in Supabase Vault is valid and is not a previously exposed key.
+4. Enable the server and client toggles together; deploy both. Verify a minimal owner-authenticated conversation and the 20-request-per-day quota. Test without changing Messenger, Meta campaigns, or the underlying ledger.
+5. Direct chat sends a question, selected month/branch, and up to six sanitized previous turns to the secured Supabase Edge Function. The function fetches authorized aggregate finance data and calls Anthropic. Customer details should never be entered in chat.
 
-- GitHub: `jmguinto023-cloud/jmags-website` (`finance/index.html`)
-- Supabase: `jmags-claude-advisor` (currently disabled for billable API use)
-- Claude Pro chat: https://claude.ai/new
+## Security notes
+
+- Owner-only authenticated access; the backend requires JWT, live owner role and approval.
+- API key remains in encrypted Supabase Vault and is never sent to the browser.
+- Aggregate finance data only; no individual customer, phone, or raw job records from the DB.
+- Chat text is held in page memory, not stored in the JMAGS database. Refreshing clears it.
+- Claude cannot change Meta campaigns, your Messenger bot, invoices or records.
+- Incomplete historical finance data must not be treated as definitive profitability.
+- The existing Messenger bot and monitoring scheduler are untouched.
+
+## Source files
+
+- `finance/index.html`
+- `supabase/functions/jmags-claude-advisor/index.ts`
+
+Official reference: https://support.claude.com/en/articles/9876003-why-is-claude-api-usage-billed-separately-from-my-paid-claude-plan
