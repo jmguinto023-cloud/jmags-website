@@ -45,6 +45,11 @@
  .ad-health-creative{background:#133555;color:#c3e0ff;border-color:#32628c}
 }
 
+.ad-health-reasoning{margin:14px 0;padding:12px;border-radius:10px;border:1px solid #b9c9df;background:rgba(89,138,211,.09);font-size:13px;line-height:1.6;overflow-wrap:anywhere}
+.ad-health-reasoning strong{display:block;margin-bottom:7px}
+.ad-health-reasoning p,.ad-reason-details p{white-space:pre-wrap;margin:0;overflow-wrap:anywhere}
+.ad-reason-details summary{cursor:pointer;white-space:nowrap;font-weight:650}
+.ad-reason-details p{margin-top:8px;min-width:220px;max-width:390px;line-height:1.6}
 /* JMAGS Claude chat UI — automatic API stays disabled until separately authorized. */
 .claude-chat{border:1px solid #cfdaea;border-radius:16px;padding:14px;background:#f7faff}
 .claude-messages{min-height:190px;max-height:430px;overflow-y:auto;display:flex;flex-direction:column;gap:12px;margin:12px 0 16px;padding:10px 4px}
@@ -328,6 +333,7 @@ function adHealthPanel(){
      out+='<article class="ad-health-card '+st+'"><div class="ad-health-head"><div class="health-title">'+h(r.campaign||"Unnamed campaign")+'</div>'+adStatus(r.status)+'</div>';
      out+='<div class="ad-health-primary"><div>Messages today<strong>'+adMessageCount(r.messages_today)+'</strong></div><div>Cost / message today<strong>'+adMoney(r.cost_per_message_today)+'</strong></div></div>';
      out+='<div class="ad-health-secondary"><span>14-day avg cost / message<strong>'+adMoney(r.account_avg_cost_per_message_14d)+'</strong></span><span>Spend today<strong>'+adMoney(r.spend_today)+'</strong></span><span>CPC today<strong>'+adMoney(r.cpc_today)+'</strong></span><span>14-day avg CPC<strong>'+adMoney(r.account_avg_cpc_14d)+'</strong></span></div>';
+     out+='<div class="ad-health-reasoning"><strong>Why this status / decision</strong><p>'+h(r.reasoning||"No explanation logged for this check yet.")+'</p></div>';
      out+='<div class="health-meta">Action: <strong>'+h(adAction(r.action_taken))+'</strong><div>'+adCreativeTag(r)+'</div><div>Campaign ID: '+h(r.campaign_id||"—")+'</div><div>Checked: '+h(adTime(r.checked_at))+' PH time</div>';
      if(r.replacement_campaign_id)out+='<div>Replacement ID: '+h(r.replacement_campaign_id)+'</div>';
      out+='</div>'+adStrategyDetail(stateById.get(String(r.campaign_id||"")))+'</article>';
@@ -337,8 +343,8 @@ function adHealthPanel(){
  out+='<div class="sectiontitle"><h3>Automated action history</h3><span class="hint">Most recent 300 checks · Cavite only</span></div>';
  if(state.adHealthLoaded&&!state.adHealthHistory.length)out+='<div class="ad-health-empty">No automated decisions have been logged yet. Once the monitor runs, entries will appear here.</div>';
  else if(state.adHealthHistory.length){
-   const rows=state.adHealthHistory.map(r=>'<tr>'+cell(h(r.check_date||"—"))+cell(h(r.campaign||"—"))+cell(adStatus(r.status))+cell(adMessageCount(r.messages_today),"right")+cell(adMoney(r.cost_per_message_today),"right")+cell(adMoney(r.account_avg_cost_per_message_14d),"right")+cell(adMoney(r.spend_today),"right")+cell(adMoney(r.cpc_today),"right")+cell(adMoney(r.account_avg_cpc_14d),"right")+cell(h(adAction(r.action_taken)))+cell(adCreativeCell(r))+cell(h(r.replacement_campaign_id||"—"))+cell(h(adTime(r.checked_at)))+'</tr>');
-   out+='<div class="ad-health-log">'+table(["Date","Campaign","Status","Messages today","Cost / msg today","14d avg cost / msg","Spend today","CPC today","14d avg CPC","Action taken","Creative refreshed","Replacement ID","Checked (PH)"],rows)+'</div>';
+   const rows=state.adHealthHistory.map(r=>'<tr>'+cell(h(r.check_date||"—"))+cell(h(r.campaign||"—"))+cell(adStatus(r.status))+cell(adMessageCount(r.messages_today),"right")+cell(adMoney(r.cost_per_message_today),"right")+cell(adMoney(r.account_avg_cost_per_message_14d),"right")+cell(adMoney(r.spend_today),"right")+cell(adMoney(r.cpc_today),"right")+cell(adMoney(r.account_avg_cpc_14d),"right")+cell(h(adAction(r.action_taken)))+cell(r.reasoning?'<details class="ad-reason-details"><summary>See reasoning</summary><p>'+h(r.reasoning)+'</p></details>':"—")+cell(adCreativeCell(r))+cell(h(r.replacement_campaign_id||"—"))+cell(h(adTime(r.checked_at)))+'</tr>');
+   out+='<div class="ad-health-log">'+table(["Date","Campaign","Status","Messages today","Cost / msg today","14d avg cost / msg","Spend today","CPC today","14d avg CPC","Action taken","Reasoning","Creative refreshed","Replacement ID","Checked (PH)"],rows)+'</div>';
  }
  if(state.adHealthStrategyError)out+='<p class="hint">Optional creative history is unavailable: '+h(state.adHealthStrategyError)+'</p>';
  if(state.adHealthFetchedAt)out+='<p class="ad-health-freshness">Data refreshed '+h(adTime(state.adHealthFetchedAt))+' Philippine time. Dashboard updates approximately every minute while open.</p>';
@@ -349,7 +355,7 @@ async function loadAdHealth(){
  if(state.adHealthLoading||!state.user||!admin())return;
  state.adHealthLoading=true;
  const today=manilaToday();
- const columns="check_date,branch,campaign,campaign_id,status,cpc_today,account_avg_cpc_14d,spend_today,messages_today,cost_per_message_today,account_avg_cost_per_message_14d,action_taken,creative_refreshed,replacement_campaign_id,checked_at";
+ const columns="check_date,branch,campaign,campaign_id,status,cpc_today,account_avg_cpc_14d,spend_today,messages_today,cost_per_message_today,account_avg_cost_per_message_14d,action_taken,creative_refreshed,reasoning,replacement_campaign_id,checked_at";
  try{
    const [todayResult,historyResult,strategyResult]=await Promise.all([
      db.from("jmags_ad_health")
