@@ -9,6 +9,20 @@
 
 /* Cavite ad guardrail display: read-only */
 .ad-health-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,245px),1fr));gap:12px;margin:13px 0 19px}
+/* Compact Cavite ad health cards */
+.ad-health-cards{grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:9px}
+.ad-health-card{padding:9px 10px;border-radius:10px}
+.ad-health-card .health-title{font-size:12px;line-height:1.3}
+.ad-health-primary{gap:6px;margin:7px 0}
+.ad-health-primary>div{padding:7px;font-size:10px}
+.ad-health-primary strong{font-size:16px;margin-top:2px}
+.ad-health-secondary{gap:4px;margin:6px 0}
+.ad-health-secondary span{font-size:10px}
+.ad-health-secondary strong{font-size:12px;margin-top:1px}
+.ad-health-reasoning{padding:7px;margin:7px 0;font-size:11px;line-height:1.35}
+.ad-health-reasoning strong{margin-bottom:3px}
+.ad-health-card .health-meta{font-size:10px;line-height:1.35}
+@media(max-width:620px){.ad-health-cards{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.ad-health-card{padding:8px 7px}.ad-health-primary>div{padding:5px 4px}.ad-health-primary strong{font-size:14px}.ad-health-card .health-title{font-size:11px}}
 .ad-health-card{border:1px solid #dce4ee;border-left:5px solid #8793a6;border-radius:13px;padding:15px;background:#fff;overflow-wrap:anywhere}
 .ad-health-card.green{border-left-color:#219653;background:#f6fff9}
 .ad-health-card.yellow{border-left-color:#d5a029;background:#fffcf3}
