@@ -1,0 +1,20 @@
+{
+  "name": "JMAGS Command Center",
+  "short_name": "JMAGS",
+  "description": "JMAGS Appliances operations and finance command center",
+  "id": "/finance/",
+  "start_url": "/finance/?source=pwa",
+  "scope": "/finance/",
+  "display": "standalone",
+  "background_color": "#111e34",
+  "theme_color": "#111e34",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "/finance/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
