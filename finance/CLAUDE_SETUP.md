@@ -1,43 +1,47 @@
-# JMAGS Claude AI – secure integration
+# JMAGS Claude AI – activation and secure integration
 
 ## Current status
-- Backend deployed: Supabase Edge Function `jmags-claude-advisor` (JWT verification ON).
-- Website: `https://jmagsappliances.tech/finance/` → **Claude AI** tab (visible only to approved JMAGS owner).
-- **Not connected to Anthropic until the owner supplies an API key in Supabase Edge Function Secrets.**
-- This project intentionally does **not** connect to or modify the JMAGS Messenger bot on Render.
-- Source: `supabase/functions/jmags-claude-advisor/index.ts`; UI: `finance/index.html`.
 
-## Activate Claude (owner action)
+- **Installed**: owner-only Claude Finance Advisor in `https://jmagsappliances.tech/finance/` → **Claude AI**.
+- **Backend**: Supabase Edge Function `jmags-claude-advisor` (JWT verification ON), deployed and independent of the Messenger bot.
+- **API activation**: not complete until the JMAGS owner enters a **fresh Anthropic API key**. No key is currently saved in the JMAGS Claude Vault record.
+- **Data**: read-only aggregate financial views. Missing historic jobs/expenses mean results must not be considered a finalized profit report.
 
-1. In the [Claude Console](https://console.anthropic.com/), open API Keys, create a key for this JMAGS integration, and enable Anthropic API billing/spend limits if needed. A Claude website subscription is **not** the same as API billing.
-2. Sign in to [JMAGS Supabase project](https://supabase.com/dashboard/project/fhjarnogglakehaztbbj/functions) and open **Edge Functions → Secrets**.
-3. Add a new secret **Name**: `ANTHROPIC_API_KEY`; **Value**: your key from Claude Console. Save. Do **not** put it in GitHub, ChatGPT, the browser JavaScript, a spreadsheet, or the Messenger bot environment.
-4. Reopen [JMAGS Command Center](https://jmagsappliances.tech/finance/), sign in with the existing approved owner account, and refresh with Ctrl+Shift+R if needed.
-5. Select **October 2026 → Cavite → Claude AI**, and ask: `Which ad campaigns need investigation before spending more?`. The app sends a *summary* of financial data; Claude returns an advisory response. Do not use unimported sales as a zero-profit conclusion.
+## Activate from the JMAGS Command Center (recommended)
 
-## Security / scope
-- Approved **owner-only** check on server: Supabase user auth token + live `my_role() = owner` and `is_approved() = true`.
-- Server-side API key; never in browser, logs, or the public repository.
-- The server reads only the `jmags_monthly_finance` aggregate view and `jmags_ad_spend_daily` campaign spending, not customer data or individual repair records.
-- No CRM changes, no campaign changes, no messaging bot changes, no writes to financial records.
-- Atomic **20 Claude requests per Manila calendar day** per owner, enforced in Postgres via `jmags_claim_claude_quota`, plus up to 850 output tokens/request. Each request can incur Claude API charges.
-- Accepts only the JMAGS website origin for browser requests; validates JWT, owner role, branch, date and question length.
-- No customer contact details or raw ledger rows transmitted. Avoid putting sensitive customer details into the free-text question.
-- Answers are advisory; the initial October imported Facebook spending does **not** include the missing historical job/expense transactions in the current cloud ledger.
+1. In [Anthropic Console](https://console.anthropic.com/settings/keys), **revoke the old API key previously pasted into a chat**, create a **new API key** for JMAGS, and set a spending limit. API billing is separate from Claude chat subscriptions.
+2. Open [JMAGS Command Center](https://jmagsappliances.tech/finance/) and sign in as the approved JMAGS owner.
+3. Open **Claude AI**. In the **Activate Claude** panel, paste the fresh API key into the password-style field, then click **Save key securely & activate Claude**.
+4. Select October 2026 and Cavite and ask: **Which ad campaigns need investigation before spending more?**
+5. After a successful AI response, review recommendations against verified ledger figures. Do not interpret missing sales records as zero sales.
+
+The key is posted once from the authenticated owner's browser to a restricted Supabase Postgres RPC over HTTPS; it is stored encrypted in **Supabase Vault**. The website never writes the key into source files, URLs, browser storage, or GitHub. The original key from chat **must not be reused**.
+
+## Security controls
+
+- The API key setter `public.jmags_claude_store_key(text)` only accepts signed-in **approved owners** and never returns key content.
+- The key is encrypted in Vault under `jmags_anthropic_api_key`.
+- The runtime key reader `public.jmags_claude_runtime_key()` is executable **only by the Supabase service role**, not regular signed-in users or guests.
+- `public.jmags_claude_is_configured()` reveals only boolean activation status to the owner.
+- The Edge Function validates JWT, approved owner status, reporting parameters, and the JMAGS website origin.
+- **No** customer names, phone numbers, individual repair records, or other customer PII are included in Anthropic API requests (avoid typing them manually into the question).
+- Requests are read-only analysis and cannot mutate the CRM, Messenger bot, ad campaigns, database, or ledger.
+- Daily owner-only API quota is 20 requests per Manila calendar day.
+- No automated API spending without the owner's explicit key activation.
+- Supabase Edge Function Secrets variable `ANTHROPIC_API_KEY` remains supported as an optional legacy fallback, but **is no longer required**.
 
 ## Troubleshooting
-- **Not configured**: `CLAUDE_NOT_CONFIGURED`; save `ANTHROPIC_API_KEY` in Supabase Edge Function Secrets.
-- **API key rejected**: verify it is from Claude Console and entered exactly.
-- **API billing or rate limits**: check Claude Console billing and usage.
-- **403**: must be signed into the approved JMAGS owner account; do not share owner credentials.
-- **429 Daily limit**: allow quota to reset next Asia/Manila day.
-- **Incomplete finance data**: verify job/expense entries and historical imports before acting on recommendations.
+
+- **Not activated**: Save a new valid API key using the **Activate Claude** form.
+- **Key rejected**: Verify it is a real Anthropic Console API key, not a Claude chat subscription/session token. Replace the saved key in the same panel.
+- **API billing error**: Enable Anthropic API billing/credits and project spending limits.
+- **Missing records**: Import/verify historic JMAGS jobs and expense records before interpreting profit estimates.
+- **403**: Only the approved JMAGS owner account can use the Claude feature.
 
 ## Independent components
-- JMAGS Command Center website repository: `jmguinto023-cloud/jmags-website`.
-- New Edge Function: `jmags-claude-advisor`, `verify_jwt=true`.
-- Messenger bot: separate `jmguinto023-cloud/Jmags-messenger-bot` repo and Render service; **unmodified**.
 
-For reference:
-- [Supabase Edge Function secrets](https://supabase.com/docs/guides/functions/secrets)
-- [Anthropic API overview](https://platform.claude.com/docs/en/api/overview)
+- Website repository: `jmguinto023-cloud/jmags-website`.
+- Edge Function source: `supabase/functions/jmags-claude-advisor/index.ts`.
+- Messenger bot: `jmguinto023-cloud/Jmags-messenger-bot` and its Render service; **not changed**.
+
+Reference: https://supabase.com/docs/guides/database/vault
