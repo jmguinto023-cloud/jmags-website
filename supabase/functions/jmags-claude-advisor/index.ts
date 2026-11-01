@@ -153,13 +153,50 @@ Deno.serve(async (req: Request) => {
       clearTimeout(timer);
     }
     if (!response.ok) {
+      // Anthropic uses HTTP 400 for exhausted API credits and spend limits.
+      // Never return or log the raw stored API key.
+      let providerMessage = "";
+      let providerType = "";
+      try {
+        const failure = await response.json();
+        providerMessage = String(failure?.error?.message ?? "");
+        providerType = String(failure?.error?.type ?? "");
+      } catch { /* Unreadable vendor error. */ }
+      const lower = providerMessage.toLowerCase();
+      const info = { upstreamStatus: response.status, providerType: providerType.slice(0, 50) };
+      const billingLink = "https://platform.claude.com/settings/billing";
+      if (/credit balance|insufficient credit|low balance|balance too low|purchase credits|out of credits/.test(lower)) {
+        return reply(req, 503, {
+          ...info, code: "CLAUDE_CREDITS",
+          error: "Your Claude API credit balance is too low. Go to Anthropic Console > Billing to add credits or claim eligible plan credits.",
+          helpUrl: billingLink,
+        });
+      }
+      if (/spend limit|spending limit|monthly limit|monthly spend|usage limit|budget exceeded|organization.*limit/.test(lower)) {
+        return reply(req, 503, {
+          ...info, code: "CLAUDE_SPEND_LIMIT",
+          error: "Your Anthropic organization or workspace reached its API spending limit. Review your Console budget settings.",
+          helpUrl: billingLink,
+        });
+      }
+      if (response.status === 400 && /organization.*disabled|account.*disabled/.test(lower))
+        return reply(req, 503, { ...info, code: "CLAUDE_ORG_DISABLED", error: "The Anthropic organization is disabled for API use. Check your Console organization status." });
+      if ([400, 404].includes(response.status) && /model|not found|unavailable/.test(lower))
+        return reply(req, 502, { ...info, code: "CLAUDE_MODEL_UNAVAILABLE", error: "The selected Claude model is unavailable to this API account. Check model access in Anthropic Console." });
       if (response.status === 401 || response.status === 403)
-        return reply(req, 503, { code: "CLAUDE_KEY_REJECTED", error: "Claude API authentication failed. Check the saved API key in Supabase." });
+        return reply(req, 503, { ...info, code: "CLAUDE_KEY_REJECTED", error: "Anthropic rejected the API credential. Replace it with a valid Claude Console API key." });
       if (response.status === 402)
-        return reply(req, 503, { error: "Claude API billing is not enabled or has insufficient credits." });
+        return reply(req, 503, { ...info, code: "CLAUDE_BILLING", error: "Anthropic reports an API billing issue.", helpUrl: billingLink });
       if (response.status === 429)
-        return reply(req, 429, { error: "Claude API rate or spending limit reached. Retry later." });
-      return reply(req, 502, { error: "Claude API request failed (HTTP " + response.status + ")." });
+        return reply(req, 429, { ...info, code: "CLAUDE_RATE_LIMIT", error: "Anthropic rate limit reached. Try again later." });
+      const safeDetail = providerMessage.replace(/sk-ant-[a-z0-9_-]+/gi, "[redacted]")
+        .replace(/https?:\/\/[^\s]+/gi, "[link]").slice(0, 200);
+      return reply(req, 502, {
+        ...info, code: "CLAUDE_PROVIDER_ERROR",
+        error: safeDetail
+          ? "Anthropic rejected the request (HTTP " + response.status + "): " + safeDetail
+          : "Anthropic rejected the request (HTTP " + response.status + "). Check your API account and billing.",
+      });
     }
     const payload = await response.json();
     const answer = (payload.content || []).filter((part: { type: string }) => part.type === "text")
