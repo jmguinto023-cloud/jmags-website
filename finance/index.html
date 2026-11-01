@@ -129,27 +129,19 @@ body+='<div class="foot">Financial reports include verified jobs and expenses on
 
 const CLAUDE_DIRECT_ENABLED = false; // Owner selected Claude Pro-only mode: no chargeable API use.
 function claudePanel(){
- let out='<section class="panel"><div class="sectiontitle"><h2>Chat with Claude · JMAGS</h2><span class="pill verified">Owner only</span></div>';
- out+='<p class="hint">Ask questions about JMAGS sales, repairs, expenses and ads. Financial context is limited to summarized records, and Claude cannot change campaigns or bookings.</p>';
- out+='<div class="claude-chat"><div class="claude-messages" role="log" aria-label="Claude conversation" aria-live="polite">';
- if(!state.claudeChatMessages.length)out+='<div class="claude-chat-empty">Your Claude conversation will appear here when direct API access is enabled.<br>Type a question below to prepare for chat.</div>';
- for(const m of state.claudeChatMessages){
-   out+='<div class="claude-bubble '+(m.role==="user"?"user":"assistant")+'">'+h(m.text)+'</div>';
- }
- out+='</div>';
- out+='<form id="claudeChatForm"><label for="claudeChatInput">Message Claude</label><div class="claude-compose"><textarea id="claudeChatInput" name="message" rows="2" maxlength="500" placeholder="Ask about campaign costs, branch profitability, or JMAGS operations..." required>'+h(state.claudeQuestion)+'</textarea><button class="primary" type="submit"'+(state.claudeChatBusy?" disabled":"")+'>'+(state.claudeChatBusy?"Sending…":"Send")+'</button></div></form>';
- if(state.claudeChatError)out+=banner(h(state.claudeChatError),"warn");
- if(!CLAUDE_DIRECT_ENABLED)out+='<div class="claude-disabled-note"><strong>Direct replies are not activated.</strong> Your Claude Pro plan covers chats on Claude.ai, but not automatic replies inside JMAGS. The API service is deliberately disabled to prevent extra charges. To enable one-box chatting, add separate API credits and authorize activating paid API access.</div>';
- out+='</div>';
- out+='<details class="claude-plain-details"><summary>Continue using Claude Pro without API charges</summary>';
- out+='<p class="hint">Use your existing Claude Pro subscription. This requires copying the brief into Claude, but has no additional API charge.</p>';
+ const month=h(state.month),branch=h(state.branch);
+ let out='<section class="panel"><div class="sectiontitle"><h2>Claude Autopilot · Decision Transparency</h2><span class="pill verified">Owner only</span></div>';
+ out+='<p class="hint">Read-only transparency dashboard. Paid Claude API is disabled. No automatic decisions or campaign changes are being executed by this panel.</p>';
+ out+='<div class="claude-disabled-note"><strong>Autopilot status: NOT ACTIVE.</strong> No paid Claude calls are enabled. The separate ad-monitor scheduler has not been verified. Existing 20-request daily API quota remains unchanged.</div>';
+ out+='<div class="stats"><div class="stat"><small>Selected period</small><strong>'+month+'</strong></div><div class="stat"><small>Branch</small><strong>'+branch+'</strong></div><div class="stat"><small>Claude API decisions</small><strong>Not running</strong></div></div>';
+ out+='<h3>Transparent decision record</h3><p class="hint">When an authorized automatic Claude workflow is activated, each run must record its exact request, full response, recommendation, proposed action, actual execution result, timestamp and measured API token usage/cost. Until then, no Claude conversation is represented as having happened.</p>';
+ out+='<div class="ad-health-empty">No authenticated Claude Autopilot conversation or command history is available yet. Existing Cavite ad-monitor events are shown separately under <strong>Ads → Cavite Ad Health</strong>; those events do not establish a Claude conversation transcript.</div>';
+ out+='<details class="claude-plain-details"><summary>View the existing Claude Pro manual option</summary><p class="hint">Your Pro subscription can still analyze a copied JMAGS financial summary without activating a separately billed API.</p>';
  out+='<div class="claude-tools"><button class="secondary" data-claude-prompt="costs" type="button">Reduce expenses</button><button class="secondary" data-claude-prompt="ads" type="button">Review ad costs</button><button class="secondary" data-claude-prompt="branch" type="button">Branch risks</button></div>';
- out+='<p><button class="secondary" type="button" id="copyClaudePro">Copy JMAGS financial brief</button> <a href="https://claude.ai/new" target="_blank" rel="noopener noreferrer">Open Claude Pro chat</a></p>';
+ out+='<p><button class="secondary" type="button" id="copyClaudePro">Copy JMAGS financial brief</button> <a href="https://claude.ai/new" target="_blank" rel="noopener noreferrer">Open Claude Pro</a></p>';
  if(state.claudeMessage)out+=banner(h(state.claudeMessage),state.claudeBrief?"good":"warn");
  if(state.claudeBrief)out+='<details open><summary>Financial brief preview</summary><textarea rows="9" readonly>'+h(state.claudeBrief)+'</textarea></details>';
- out+='</details>';
- out+='<p class="hint">Monthly finance data may be incomplete (October 2–5 Cavite historical sales, some agent fees and other costs). The Messenger bot is unchanged.</p></section>';
- return out;
+ out+='</details><p class="hint">No Messenger bot or campaign changes were made.</p></section>';return out;
 }
 async function submitClaudeChat(form){
  if(role()!=="owner")throw Error("Owner approval required for Claude chat.");
