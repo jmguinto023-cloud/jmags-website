@@ -211,6 +211,7 @@ function adAction(value){
 }
 function adHealthPanel(){
  const today=manilaToday();
+ const localHour=Number(new Intl.DateTimeFormat("en-GB",{timeZone:"Asia/Manila",hour:"2-digit",hourCycle:"h23"}).format(new Date()));
  let out='<section class="panel" id="ad-health-panel"><div class="ad-health-head"><div><h2>Cavite Ad Health</h2><p class="hint">Read-only Meta Ads guardrail status from Claude’s separate monitoring system. Today is '+h(today)+' in Manila. This panel never pauses, replaces or scales an ad.</p></div><button class="secondary" type="button" id="refreshAdHealth"'+(state.adHealthLoading?" disabled":"")+'>'+(state.adHealthLoading?"Refreshing…":"↻ Refresh checks")+'</button></div>';
  if(state.adHealthError)out+=banner("Unable to load the ad monitoring log: "+h(state.adHealthError),"bad");
  if(!state.adHealthLoaded&&!state.adHealthError)out+='<p class="hint">Loading Cavite monitoring checks…</p>';
@@ -223,7 +224,8 @@ function adHealthPanel(){
  const order={red:0,yellow:1,green:2};
  const cards=[...latest.values()].sort((a,b)=>(order[a.status]??3)-(order[b.status]??3)||String(a.campaign).localeCompare(String(b.campaign)));
  if(state.adHealthLoaded&&!cards.length){
-   out+='<div class="ad-health-empty">No Cavite guardrail checks logged for today yet. The status is <strong>not yet reported</strong> — it does not mean every campaign is healthy. Refresh after the scheduled check runs.</div>';
+   if(localHour>=19)out+=banner("Monitoring warning: No Cavite ad-health checks have been recorded today, even though 5 AM, 10 AM and 6 PM runs were expected. The automatic ad monitor is NOT VERIFIED as running; check the external scheduler before relying on campaign changes.","warn");
+   else out+='<div class="ad-health-empty">No Cavite guardrail checks logged for today yet. The status is <strong>not yet reported</strong> — it does not mean every campaign is healthy. Refresh after a scheduled check.</div>';
  }else if(cards.length){
    const counts={red:0,yellow:0,green:0};for(const row of cards){if(counts[row.status]!==undefined)counts[row.status]++;}
    out+='<p class="hint">Latest check per campaign: '+cards.length+' · Red '+counts.red+' · Yellow '+counts.yellow+' · Green '+counts.green+'</p><div class="ad-health-cards">';
