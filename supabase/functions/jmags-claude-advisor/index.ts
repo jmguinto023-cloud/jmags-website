@@ -3,6 +3,8 @@ import { createSupabaseContext } from "npm:@supabase/server@1";
 // Owner-only, read-only finance assistant. No Messenger bot dependencies.
 const ALLOWED_ORIGINS = new Set(["https://jmagsappliances.tech", "https://www.jmagsappliances.tech"]);
 const MODEL = "claude-haiku-5-5";
+// JMAGS owner selected Claude Pro chat mode; block all billable API requests until explicitly re-enabled.
+const JMAGS_PAID_API_ENABLED = false;
 function reply(req: Request, status: number, payload: Record<string, unknown>): Response {
   const origin = req.headers.get("origin") || "";
   const headers: Record<string, string> = {
@@ -35,6 +37,7 @@ Deno.serve(async (req: Request) => {
   }
   if (!ALLOWED_ORIGINS.has(origin)) return reply(req, 403, { error: "Request origin not allowed." });
   if (req.method !== "POST") return reply(req, 405, { error: "POST required." });
+  if (!JMAGS_PAID_API_ENABLED) return reply(req, 409, { code: "JMAGS_CLAUDE_PRO_ONLY", error: "JMAGS is using Claude Pro chat mode. Automatic paid API requests are disabled. Open the updated Command Center and select Copy JMAGS financial brief." });
 
   try {
     const { data: ctx, error: authError } = await createSupabaseContext(req, { auth: "user" });
