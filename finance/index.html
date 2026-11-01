@@ -44,6 +44,21 @@
  .ad-health-strategy{border-color:#484e58}.ad-health-strategy summary{color:#b6d9ff}
  .ad-health-creative{background:#133555;color:#c3e0ff;border-color:#32628c}
 }
+
+/* JMAGS Claude chat UI — automatic API stays disabled until separately authorized. */
+.claude-chat{border:1px solid #cfdaea;border-radius:16px;padding:14px;background:#f7faff}
+.claude-messages{min-height:190px;max-height:430px;overflow-y:auto;display:flex;flex-direction:column;gap:12px;margin:12px 0 16px;padding:10px 4px}
+.claude-bubble{border-radius:14px;padding:12px 14px;line-height:1.6;white-space:pre-wrap;overflow-wrap:anywhere;max-width:92%;font-size:14px}
+.claude-bubble.user{background:#1957b8;color:#fff;margin-left:auto}
+.claude-bubble.assistant{background:#fff;color:#172337;border:1px solid #d8e3ef;margin-right:auto}
+.claude-chat-empty{margin:auto;padding:30px 10px;text-align:center;color:#637a95;line-height:1.6}
+.claude-compose{display:flex;gap:8px;align-items:flex-end}
+.claude-compose textarea{margin-top:0;min-height:65px;resize:vertical;flex:1;min-width:0}
+.claude-compose button{min-height:45px}
+.claude-disabled-note{padding:12px;background:#fff6e4;border-left:4px solid #d39c29;border-radius:10px;color:#6f4e12;font-size:13px;margin:12px 0}
+.claude-plain-details{margin-top:15px;padding:12px;border:1px solid #d6e0ec;border-radius:11px}
+.claude-plain-details summary{cursor:pointer;font-weight:700}
+@media(max-width:640px){.claude-compose{display:block}.claude-compose button{margin-top:10px;width:100%}.claude-bubble{max-width:100%}}
 </style>
 </head><body>
 <header class="top"><div><div class="logo">JMAGS <span>COMMAND CENTER</span></div><div class="small">Appliances • San Pablo & Cavite • Finance Automation</div></div><div id="identity" class="small"></div></header>
@@ -56,7 +71,7 @@ const URL_DB="https://fhjarnogglakehaztbbj.supabase.co", PUBLIC_KEY="sb_publisha
 const root=document.getElementById("root"), identity=document.getElementById("identity");
 if(!window.supabase){root.innerHTML='<div class="banner bad">Supabase client could not load. Check your connection or script blocker.</div>';return;}
 const db=window.supabase.createClient(URL_DB,PUBLIC_KEY,{auth:{persistSession:true,autoRefreshToken:true}});
-const state={user:null,profile:null,tab:"Overview",branch:"all",month:new Date().getDate()<=7?monthOffset(-1):monthOffset(0),jobs:[],expenses:[],ads:[],ledger:[],monthly:[],working:false,claudeQuestion:"",claudeAnswer:"",claudeMessage:"",claudeBrief:"",claudeHelpUrl:"",claudeConfigured:null,claudeSetupError:"",adHealthToday:[],adHealthHistory:[],adHealthLoaded:false,adHealthLoading:false,adHealthError:"",adHealthFetchedAt:"",adHealthStrategy:[],adHealthStrategyError:""};
+const state={user:null,profile:null,tab:"Overview",branch:"all",month:new Date().getDate()<=7?monthOffset(-1):monthOffset(0),jobs:[],expenses:[],ads:[],ledger:[],monthly:[],working:false,claudeQuestion:"",claudeAnswer:"",claudeMessage:"",claudeBrief:"",claudeHelpUrl:"",claudeChatMessages:[],claudeChatBusy:false,claudeChatError:"",claudeConfigured:null,claudeSetupError:"",adHealthToday:[],adHealthHistory:[],adHealthLoaded:false,adHealthLoading:false,adHealthError:"",adHealthFetchedAt:"",adHealthStrategy:[],adHealthStrategyError:""};
 let recoveryMode=false;
 function monthOffset(n){const d=new Date(); d.setDate(1);d.setMonth(d.getMonth()+n);return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")}
 function h(v){return String(v??"").replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]})}
@@ -111,22 +126,60 @@ if(state.tab==="Claude AI"&&role()==="owner")body+=claudePanel();
 body+='<div class="foot">Financial reports include verified jobs and expenses only. Ad figures are imported account spend and require periodic sync. Investor-supported costs are shown separately. This dashboard is not a substitute for bank reconciliation or accounting review.</div>';root.innerHTML=body;
 }
 
-function claudePanel(){
- const prompts=[["costs","How can JMAGS reduce expenses without affecting repair quality?"],["ads","Which Facebook ad campaigns should JMAGS investigate before increasing spend?"],["branch","What are the biggest finance reporting gaps and risks for this branch?"]];
- let out='<section class="panel"><div class="sectiontitle"><h2>Claude Pro · JMAGS Finance Advisor</h2><span class="pill verified">Owner only</span></div>';
- out+='<p class="hint"><strong>Selected: Claude Pro, no extra API charges.</strong> Copy a financial summary from JMAGS and paste it in your personal Claude Pro chat. No paid Anthropic API call is made by this workflow.</p>';
- out+='<div class="panel"><h3>1. Prepare your question</h3>';
- out+='<div class="claude-tools">'+prompts.map(x=>'<button class="secondary" type="button" data-claude-prompt="'+x[0]+'">'+h(x[1])+'</button>').join("")+'</div>';
- out+='<label>Question for Claude Pro<textarea id="claudeProQuestion" rows="3" maxlength="500">'+h(state.claudeQuestion||"How can JMAGS reduce advertising costs and improve branch profitability?")+'</textarea></label>';
- out+='<p><button class="primary" type="button" id="copyClaudePro">Copy JMAGS financial brief</button></p>';
- out+='<p class="hint">Uses the reporting month and branch selected above. Only aggregate figures are copied, never customer details or the stored API key.</p></div>';
- out+='<div class="panel"><h3>2. Open your Claude Pro account</h3><p>Paste the copied brief into a new Claude conversation.</p><p><a href="https://claude.ai/new" target="_blank" rel="noopener noreferrer">Open Claude Pro chat</a></p><p class="hint">This uses your Claude Pro chat subscription, subject to normal plan usage limits.</p></div>';
- if(state.claudeMessage)out+=banner(h(state.claudeMessage),state.claudeBrief?"good":"warn");
- if(state.claudeBrief)out+='<details open><summary>Financial brief preview / manual copy fallback</summary><p class="hint">If your browser blocks copying, long-press the text below and select Copy.</p><textarea id="claudeProBriefPreview" rows="10" readonly>'+h(state.claudeBrief)+'</textarea></details>';
- out+='<p class="hint">October 2026 Cavite repair and maintenance entries for Oct 6–31 are imported, but Oct 2–5 sales, agent fees and other costs remain incomplete; imported advertising is not proof of final profit or ROI. Your Messenger bot is unchanged.</p>';
- return out+'</section>';
-}
 
+const CLAUDE_DIRECT_ENABLED = false; // Owner selected Claude Pro-only mode: no chargeable API use.
+function claudePanel(){
+ let out='<section class="panel"><div class="sectiontitle"><h2>Chat with Claude · JMAGS</h2><span class="pill verified">Owner only</span></div>';
+ out+='<p class="hint">Ask questions about JMAGS sales, repairs, expenses and ads. Financial context is limited to summarized records, and Claude cannot change campaigns or bookings.</p>';
+ out+='<div class="claude-chat"><div class="claude-messages" role="log" aria-label="Claude conversation" aria-live="polite">';
+ if(!state.claudeChatMessages.length)out+='<div class="claude-chat-empty">Your Claude conversation will appear here when direct API access is enabled.<br>Type a question below to prepare for chat.</div>';
+ for(const m of state.claudeChatMessages){
+   out+='<div class="claude-bubble '+(m.role==="user"?"user":"assistant")+'">'+h(m.text)+'</div>';
+ }
+ out+='</div>';
+ out+='<form id="claudeChatForm"><label for="claudeChatInput">Message Claude</label><div class="claude-compose"><textarea id="claudeChatInput" name="message" rows="2" maxlength="500" placeholder="Ask about campaign costs, branch profitability, or JMAGS operations..." required>'+h(state.claudeQuestion)+'</textarea><button class="primary" type="submit"'+(state.claudeChatBusy?" disabled":"")+'>'+(state.claudeChatBusy?"Sending…":"Send")+'</button></div></form>';
+ if(state.claudeChatError)out+=banner(h(state.claudeChatError),"warn");
+ if(!CLAUDE_DIRECT_ENABLED)out+='<div class="claude-disabled-note"><strong>Direct replies are not activated.</strong> Your Claude Pro plan covers chats on Claude.ai, but not automatic replies inside JMAGS. The API service is deliberately disabled to prevent extra charges. To enable one-box chatting, add separate API credits and authorize activating paid API access.</div>';
+ out+='</div>';
+ out+='<details class="claude-plain-details"><summary>Continue using Claude Pro without API charges</summary>';
+ out+='<p class="hint">Use your existing Claude Pro subscription. This requires copying the brief into Claude, but has no additional API charge.</p>';
+ out+='<div class="claude-tools"><button class="secondary" data-claude-prompt="costs" type="button">Reduce expenses</button><button class="secondary" data-claude-prompt="ads" type="button">Review ad costs</button><button class="secondary" data-claude-prompt="branch" type="button">Branch risks</button></div>';
+ out+='<p><button class="secondary" type="button" id="copyClaudePro">Copy JMAGS financial brief</button> <a href="https://claude.ai/new" target="_blank" rel="noopener noreferrer">Open Claude Pro chat</a></p>';
+ if(state.claudeMessage)out+=banner(h(state.claudeMessage),state.claudeBrief?"good":"warn");
+ if(state.claudeBrief)out+='<details open><summary>Financial brief preview</summary><textarea rows="9" readonly>'+h(state.claudeBrief)+'</textarea></details>';
+ out+='</details>';
+ out+='<p class="hint">Monthly finance data may be incomplete (October 2–5 Cavite historical sales, some agent fees and other costs). The Messenger bot is unchanged.</p></section>';
+ return out;
+}
+async function submitClaudeChat(form){
+ if(role()!=="owner")throw Error("Owner approval required for Claude chat.");
+ const query=String(form.querySelector("textarea[name=message]")?.value||"").trim();
+ if(!query||query.length>500)throw Error("Enter a message of up to 500 characters.");
+ state.claudeQuestion=query;
+ if(!CLAUDE_DIRECT_ENABLED){
+   state.claudeChatError="Direct Claude API chat is currently switched off to avoid extra charges. Your Claude Pro subscription alone cannot enable replies inside this site. Use the Claude Pro option below or approve API credits to activate in-dashboard responses.";
+   render();return;
+ }
+ state.claudeChatBusy=true;
+ state.claudeChatError="";
+ const past=state.claudeChatMessages.slice(-6).map(x=>({role:x.role,content:x.text}));
+ state.claudeChatMessages.push({role:"user",text:query});
+ state.claudeQuestion="";
+ render();
+ try{
+   const r=await db.functions.invoke("jmags-claude-advisor",{body:{month:state.month,branch:state.branch,question:query,history:past}});
+   if(r.error){
+     let message=r.error.message||"Claude is unavailable";
+     try{if(r.error.context?.json){const detail=await r.error.context.json();if(detail.error)message=detail.error;}}catch(_){}
+     state.claudeChatError=message;
+   }else if(r.data?.answer){
+     state.claudeChatMessages.push({role:"assistant",text:String(r.data.answer)});
+   }else{
+     state.claudeChatError="Claude did not return a response. Try again.";
+   }
+ }catch(e){state.claudeChatError=String(e?.message||"Claude request failed");}
+ finally{state.claudeChatBusy=false;render();}
+}
 function claudeProBrief(){
  const jobs=currentJobs().filter(x=>x.status==="verified");
  const expenses=currentExpenses().filter(x=>x.status==="verified");
@@ -138,7 +191,7 @@ function claudeProBrief(){
  const totals={};
  for(const row of spend){const name=String(row.campaign||"Unnamed campaign");if(!totals[name])totals[name]={spend:0,messages:0};totals[name].spend+=n(row.amount);totals[name].messages+=n(row.messages)}
  const top=Object.entries(totals).sort((a,b)=>b[1].spend-a[1].spend).slice(0,6);
- const question=String(document.querySelector('#claudeForm textarea[name="question"]')?.value||state.claudeQuestion||"How can JMAGS reduce costs and improve profitability?").trim().slice(0,500);
+ const question=String(state.claudeQuestion||"How can JMAGS reduce costs and improve profitability?").trim().slice(0,500);
  const branch=state.branch==="all"?"Both branches":state.branch==="cavite"?"Cavite":"San Pablo";
  const lines=[
  "You are helping JMAGS Appliances (TV and appliance repair) analyze its business finances.",
@@ -165,7 +218,7 @@ function claudeProBrief(){
 }
 async function copyClaudeProBrief(){
  if(role()!=="owner")throw Error("Only the approved JMAGS owner can export a finance brief.");
- state.claudeQuestion=String(document.getElementById("claudeProQuestion")?.value||"").trim().slice(0,500);
+ state.claudeQuestion=String(document.getElementById("claudeChatInput")?.value||state.claudeQuestion||"").trim().slice(0,500);
  const content=claudeProBrief();
  state.claudeBrief=content;
  let copied=false;
@@ -342,8 +395,8 @@ async function saveJob(form){const f=new FormData(form),x={};["job_no","branch",
 async function saveExpense(form){const f=new FormData(form);const x={expense_date:f.get("expense_date"),branch:f.get("branch"),category:f.get("category"),payer:f.get("payer"),notes:String(f.get("notes")||""),amount:n(f.get("amount")),status:"submitted",submitted_by:state.user.id};const r=await db.from("jmags_finance_expenses").insert(x);if(r.error)throw r.error;toast("Expense submitted for verification.");await load()}
 async function approve(table,id,newStatus){if(!admin())return;const fields={status:newStatus,verified_by:state.user.id,verified_at:new Date().toISOString(),updated_at:new Date().toISOString()};const r=await db.from(table).update(fields).eq("id",id).eq("status","submitted").select("id");if(r.error)throw r.error;if(!r.data||!r.data.length)throw Error("Record was already changed or you lack permission");toast("Record "+newStatus+".");await load()}
 function download(){const r=currentLedger(),heads=["Date","Branch","Category","Reference","Amount","Status","Source"];const lines=[heads,...r.map(x=>[x.txn_date,x.branch,x.category,x.reference,x.amount,x.status,x.source])].map(a=>a.map(x=>'"'+String(x??"").replace(/"/g,'""')+'"').join(",")).join("\r\n");const blob=new Blob(["\uFEFF"+lines],{type:"text/csv;charset=utf-8"});const u=window.URL.createObjectURL(blob),a=document.createElement("a");a.href=u;a.download="JMAGS-Ledger-"+state.month+".csv";a.click();window.URL.revokeObjectURL(u)}
-document.addEventListener("submit",async e=>{if(!["loginForm","jobForm","expenseForm","newPasswordForm"].includes(e.target.id))return;e.preventDefault();const b=e.target.querySelector("button[type=submit],button.primary");if(b)b.disabled=true;try{if(e.target.id==="loginForm"){const f=new FormData(e.target),r=await db.auth.signInWithPassword({email:String(f.get("email")),password:String(f.get("password"))});if(r.error)throw r.error;await check()}else if(e.target.id==="newPasswordForm"){const f=new FormData(e.target);if(String(f.get("password"))!==String(f.get("confirm")))throw Error("Passwords do not match.");const r=await db.auth.updateUser({password:String(f.get("password"))});if(r.error)throw r.error;recoveryMode=false;toast("Password changed successfully.");await check()}else if(e.target.id==="jobForm")await saveJob(e.target);else await saveExpense(e.target)}catch(err){toast("Error: "+err.message);const el=document.getElementById("error");if(el)el.textContent=err.message}finally{if(b)b.disabled=false}});
-document.addEventListener("click",async e=>{const b=e.target.closest("button");if(!b)return;try{if(b.id==="signout"){await db.auth.signOut();state.user=null;login();return}if(b.id==="retryLoad"){login();check().catch(showStartupError);return}if(b.id==="signInAgain"){await db.auth.signOut();state.user=null;login();return}if(b.id==="forgotPassword"){const email=document.querySelector('#loginForm input[name="email"]')?.value?.trim();if(!email){const el=document.getElementById("error");if(el)el.textContent="Enter your email first, then click Forgot password.";return}const r=await db.auth.resetPasswordForEmail(email,{redirectTo:"https://jmagsappliances.tech/finance/"});if(r.error)throw r.error;const el=document.getElementById("error");if(el){el.style.color="#16803f";el.textContent="If this email is registered, a password-reset message will arrive. Check your inbox and spam folder."}return}if(b.dataset.claudePrompt){const texts={costs:"How can JMAGS reduce expenses without affecting repair quality?",ads:"Which Facebook ad campaigns should JMAGS investigate before increasing spend?",branch:"What are the biggest finance reporting gaps and risks for this branch?"};const area=document.getElementById("claudeProQuestion");if(area){area.value=texts[b.dataset.claudePrompt]||"";area.focus()}return}if(b.id==="copyClaudePro"){await copyClaudeProBrief();return}if(b.id==="refreshAdHealth"){await loadAdHealth();return}if(b.dataset.tab){state.tab=b.dataset.tab;render();if(state.tab==="Ads")await loadAdHealth();/* Claude Pro needs no API calls or activation checks. */return}if(b.id==="refresh"){await load();return}if(b.id==="exportCSV"){download();return}for(const [key,t,st] of [["verifyJob","jmags_finance_jobs","verified"],["voidJob","jmags_finance_jobs","void"],["verifyExpense","jmags_finance_expenses","verified"],["voidExpense","jmags_finance_expenses","void"]])if(b.dataset[key]){if(st==="void"&&!confirm("Void this submission?"))return;await approve(t,b.dataset[key],st);return}}catch(err){toast(err.message)}});
+document.addEventListener("submit",async e=>{if(!["loginForm","jobForm","expenseForm","newPasswordForm","claudeChatForm"].includes(e.target.id))return;e.preventDefault();const b=e.target.querySelector("button[type=submit],button.primary");if(b)b.disabled=true;try{if(e.target.id==="loginForm"){const f=new FormData(e.target),r=await db.auth.signInWithPassword({email:String(f.get("email")),password:String(f.get("password"))});if(r.error)throw r.error;await check()}else if(e.target.id==="newPasswordForm"){const f=new FormData(e.target);if(String(f.get("password"))!==String(f.get("confirm")))throw Error("Passwords do not match.");const r=await db.auth.updateUser({password:String(f.get("password"))});if(r.error)throw r.error;recoveryMode=false;toast("Password changed successfully.");await check()}else if(e.target.id==="claudeChatForm")await submitClaudeChat(e.target);else if(e.target.id==="jobForm")await saveJob(e.target);else await saveExpense(e.target)}catch(err){toast("Error: "+err.message);const el=document.getElementById("error");if(el)el.textContent=err.message}finally{if(b)b.disabled=false}});
+document.addEventListener("click",async e=>{const b=e.target.closest("button");if(!b)return;try{if(b.id==="signout"){await db.auth.signOut();state.user=null;login();return}if(b.id==="retryLoad"){login();check().catch(showStartupError);return}if(b.id==="signInAgain"){await db.auth.signOut();state.user=null;login();return}if(b.id==="forgotPassword"){const email=document.querySelector('#loginForm input[name="email"]')?.value?.trim();if(!email){const el=document.getElementById("error");if(el)el.textContent="Enter your email first, then click Forgot password.";return}const r=await db.auth.resetPasswordForEmail(email,{redirectTo:"https://jmagsappliances.tech/finance/"});if(r.error)throw r.error;const el=document.getElementById("error");if(el){el.style.color="#16803f";el.textContent="If this email is registered, a password-reset message will arrive. Check your inbox and spam folder."}return}if(b.dataset.claudePrompt){const texts={costs:"How can JMAGS reduce expenses without affecting repair quality?",ads:"Which Facebook ad campaigns should JMAGS investigate before increasing spend?",branch:"What are the biggest finance reporting gaps and risks for this branch?"};const area=document.getElementById("claudeChatInput");if(area){area.value=texts[b.dataset.claudePrompt]||"";area.focus()}return}if(b.id==="copyClaudePro"){await copyClaudeProBrief();return}if(b.id==="refreshAdHealth"){await loadAdHealth();return}if(b.dataset.tab){state.tab=b.dataset.tab;render();if(state.tab==="Ads")await loadAdHealth();/* Claude Pro needs no API calls or activation checks. */return}if(b.id==="refresh"){await load();return}if(b.id==="exportCSV"){download();return}for(const [key,t,st] of [["verifyJob","jmags_finance_jobs","verified"],["voidJob","jmags_finance_jobs","void"],["verifyExpense","jmags_finance_expenses","verified"],["voidExpense","jmags_finance_expenses","void"]])if(b.dataset[key]){if(st==="void"&&!confirm("Void this submission?"))return;await approve(t,b.dataset[key],st);return}}catch(err){toast(err.message)}});
 document.addEventListener("change",e=>{if(e.target.id==="month"){state.month=e.target.value;state.claudeAnswer="";state.claudeMessage="";state.claudeQuestion="";state.claudeBrief="";render()}if(e.target.id==="branch"){state.branch=e.target.value;state.claudeAnswer="";state.claudeMessage="";state.claudeQuestion="";state.claudeBrief="";render()}});
 db.auth.onAuthStateChange((event,_session)=>{if(event==="PASSWORD_RECOVERY"){recoveryMode=true;showRecovery()}});login();check().catch(showStartupError);
 window.addEventListener("unhandledrejection",event=>{if(root?.textContent?.includes("Loading your secure dashboard"))showStartupError(event.reason||new Error("A service did not respond."))});
