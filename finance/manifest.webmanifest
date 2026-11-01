@@ -1,6 +1,6 @@
 {
   "name": "JMAGS Command Center",
-  "short_name": "JMAGS",
+  "short_name": "JMAGS Center",
   "description": "JMAGS Appliances operations and finance command center",
   "id": "/finance/",
   "start_url": "/finance/?source=pwa",
@@ -11,7 +11,7 @@
   "orientation": "any",
   "icons": [
     {
-      "src": "/finance/icon.svg",
+      "src": "/finance/icon.svg?v=neon-20261102",
       "sizes": "any",
       "type": "image/svg+xml",
       "purpose": "any maskable"
