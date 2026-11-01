@@ -17,7 +17,7 @@ const URL_DB="https://fhjarnogglakehaztbbj.supabase.co", PUBLIC_KEY="sb_publisha
 const root=document.getElementById("root"), identity=document.getElementById("identity");
 if(!window.supabase){root.innerHTML='<div class="banner bad">Supabase client could not load. Check your connection or script blocker.</div>';return;}
 const db=window.supabase.createClient(URL_DB,PUBLIC_KEY,{auth:{persistSession:true,autoRefreshToken:true}});
-const state={user:null,profile:null,tab:"Overview",branch:"all",month:new Date().getDate()<=7?monthOffset(-1):monthOffset(0),jobs:[],expenses:[],ads:[],ledger:[],monthly:[],working:false,claudeQuestion:"",claudeAnswer:"",claudeMessage:"",claudeConfigured:null,claudeSetupError:""};
+const state={user:null,profile:null,tab:"Overview",branch:"all",month:new Date().getDate()<=7?monthOffset(-1):monthOffset(0),jobs:[],expenses:[],ads:[],ledger:[],monthly:[],working:false,claudeQuestion:"",claudeAnswer:"",claudeMessage:"",claudeHelpUrl:"",claudeConfigured:null,claudeSetupError:""};
 let recoveryMode=false;
 function monthOffset(n){const d=new Date(); d.setDate(1);d.setMonth(d.getMonth()+n);return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")}
 function h(v){return String(v??"").replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]})}
@@ -80,6 +80,7 @@ function claudePanel(){
  out+='<div class="claude-tools">'+prompts.map(x=>'<button class="secondary" type="button" data-claude-prompt="'+x[0]+'">'+h(x[1])+'</button>').join("")+'</div>';
  out+='<form id="claudeForm"><label>Ask Claude about '+h(state.month)+' · '+h(state.branch==="all"?"Both branches":state.branch==="cavite"?"Cavite":"San Pablo")+'<textarea name="question" rows="3" maxlength="500" placeholder="Example: How can JMAGS reduce expenses this month?" required>'+h(state.claudeQuestion)+'</textarea></label><p><button class="primary" type="submit">Ask Claude</button></p></form>';
  if(state.claudeMessage)out+=banner(h(state.claudeMessage),state.claudeAnswer?"good":"warn");
+ if(state.claudeHelpUrl==="https://platform.claude.com/settings/billing")out+='<p><a target="_blank" rel="noopener noreferrer" href="https://platform.claude.com/settings/billing">Open Claude Console billing & API credits</a></p>';
  if(state.claudeAnswer)out+='<div class="panel"><h3>Claude advice</h3><div class="ai-output">'+h(state.claudeAnswer)+'</div></div>';
  return out+'</section>';
 }
@@ -124,11 +125,12 @@ async function askClaude(form){
  const send=form.querySelector('button[type="submit"]');
  if(send)send.textContent="Consulting Claude…";
  state.claudeAnswer="";
+ state.claudeHelpUrl="";
  state.claudeMessage="Analyzing summarized finance data securely…";
  const result=await db.functions.invoke("jmags-claude-advisor",{body:{month:state.month,branch:state.branch,question}});
  if(result.error){
    let errorText=result.error.message||"Claude API unavailable";
-   try{if(result.error.context?.json){const detail=await result.error.context.json();if(detail.error)errorText=detail.error}}catch(_){}
+   try{if(result.error.context?.json){const detail=await result.error.context.json();if(detail.error)errorText=detail.error;if(detail.helpUrl==="https://platform.claude.com/settings/billing")state.claudeHelpUrl=detail.helpUrl}}catch(_){}
    state.claudeMessage=errorText;
    render();return;
  }
