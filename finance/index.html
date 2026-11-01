@@ -5,6 +5,24 @@
 :root{font-family:Inter,system-ui,-apple-system,Segoe UI,Arial,sans-serif;color:#172337;background:#f5f7fb}*{box-sizing:border-box}body{margin:0}button,input,select,textarea{font:inherit}button{cursor:pointer}a{color:#2563eb}
 .wrap{max-width:1400px;margin:auto;padding:22px}.top{background:#111e34;color:white;padding:18px 28px;display:flex;align-items:center;gap:14px;justify-content:space-between;flex-wrap:wrap}.logo{font-size:21px;font-weight:850;letter-spacing:.3px}.logo span{color:#76b3ff}.small{font-size:12px;color:#64748b}.top .small{color:#bdd0ec}.nav{display:flex;gap:7px;flex-wrap:wrap}.nav button{border:1px solid #d9e2ef;background:white;color:#344054;border-radius:11px;padding:10px 15px;font-weight:650}.nav button.active{background:#1957b8;color:#fff;border-color:#1957b8}.panel{background:#fff;border:1px solid #e4eaf2;border-radius:17px;padding:20px;margin:15px 0;box-shadow:0 2px 8px #17233708}.grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:13px}.metric{background:#fff;border:1px solid #e5ebf3;border-radius:15px;padding:17px;min-height:115px}.metric strong{font-size:25px;display:block;margin-top:11px}.metric .small{font-size:13px}.flex{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}.row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.cols3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}h1,h2,h3{line-height:1.2}h1{font-size:27px;margin:12px 0 6px}h2{font-size:19px;margin:0 0 17px}h3{font-size:16px;margin:12px 0}p{line-height:1.55}label{font-size:13px;font-weight:650;display:block;color:#475569}input,select,textarea{width:100%;margin-top:7px;padding:10px 12px;border:1px solid #cdd6e3;border-radius:9px;background:white;color:#15243b}input:focus,select:focus,textarea:focus{outline:2px solid #8eb7f8}button.primary{background:#1957b8;color:#fff;padding:11px 16px;border:0;border-radius:10px;font-weight:700}button.secondary{padding:9px 12px;border:1px solid #d6dfe9;background:#fff;border-radius:10px;color:#344054}button.smallbtn{padding:6px 10px;border:1px solid #cad8e9;background:#f7fbff;color:#164a97;border-radius:8px;font-size:12px;font-weight:700;margin-right:4px}.red{color:#bd3434}.green{color:#16803f}.hint{font-size:13px;color:#60728b;line-height:1.45}.banner{border-left:4px solid #2773d2;background:#eaf3ff;padding:13px;border-radius:9px;margin:12px 0}.warn{border-left-color:#d49a24;background:#fff7e8}.bad{border-left-color:#cc4f4f;background:#fff0f0}.good{border-left-color:#259b66;background:#eaf9f1}table{width:100%;border-collapse:collapse;font-size:13px;white-space:nowrap}th{text-align:left;font-size:12px;color:#64748b;letter-spacing:.2px;background:#f6f8fb}td,th{padding:10px 12px;border-bottom:1px solid #edf0f5}td.right,th.right{text-align:right}.scroll{overflow:auto;max-width:100%}.pill{border-radius:100px;padding:4px 9px;font-size:11px;font-weight:700;background:#e8ecf3;color:#495a75}.pill.verified{background:#dbf7e8;color:#126c35}.pill.submitted{background:#fff0ca;color:#8a6107}.pill.void{background:#f2dfe2;color:#9b2d36}.cardstat{font-weight:700}.auth{max-width:460px;margin:65px auto}.sectiontitle{display:flex;justify-content:space-between;align-items:center;gap:10px}.foot{font-size:12px;color:#64748b;margin:35px 0}#error{color:#ae2e2e;font-size:13px;min-height:18px}#toast{position:fixed;bottom:18px;right:18px;border-radius:12px;background:#122442;color:white;padding:14px 20px;display:none;max-width:360px;z-index:10}select.filter,input.filter{width:auto;min-width:140px;margin:0}@media(max-width:980px){.grid{grid-template-columns:repeat(2,1fr)}.row{grid-template-columns:1fr}}@media(max-width:640px){.grid,.cols3{grid-template-columns:1fr}.wrap{padding:12px}.metric strong{font-size:22px}.top{padding:14px}.panel{padding:14px}.auth{margin:30px auto}}
  .ai-output{white-space:pre-wrap;overflow-wrap:anywhere;font-family:inherit;line-height:1.65;font-size:14px;margin:0} .claude-tools{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0} .claude-tools button{font-size:12px} 
+
+/* Cavite ad guardrail display: read-only */
+.ad-health-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,245px),1fr));gap:12px;margin:13px 0 19px}
+.ad-health-card{border:1px solid #dce4ee;border-left:5px solid #8793a6;border-radius:13px;padding:15px;background:#fff;overflow-wrap:anywhere}
+.ad-health-card.green{border-left-color:#219653;background:#f6fff9}
+.ad-health-card.yellow{border-left-color:#d5a029;background:#fffcf3}
+.ad-health-card.red{border-left-color:#cf4350;background:#fff8f8}
+.ad-health-card .health-title{font-weight:750;font-size:14px;line-height:1.4}
+.ad-health-card .health-metrics{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin:13px 0;font-size:12px}
+.ad-health-card .health-metrics strong{display:block;font-size:15px;margin-top:3px}
+.ad-health-card .health-meta{font-size:12px;color:#53657e;line-height:1.6}
+.ad-status{display:inline-block;padding:4px 9px;border-radius:16px;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.3px;background:#e8edf2;color:#465568;white-space:nowrap}
+.ad-status.green{color:#13723d;background:#d9f5e4}
+.ad-status.yellow{color:#875c00;background:#fff0c6}
+.ad-status.red{color:#9d2734;background:#ffe1e5}
+.ad-health-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.ad-health-freshness{margin-top:5px;font-size:12px;color:#697990}
+.ad-health-empty{padding:18px;border:1px dashed #c8d5e3;border-radius:12px;color:#5c6b80;background:#f9fbfe}
 </style>
 </head><body>
 <header class="top"><div><div class="logo">JMAGS <span>COMMAND CENTER</span></div><div class="small">Appliances • San Pablo & Cavite • Finance Automation</div></div><div id="identity" class="small"></div></header>
@@ -17,7 +35,7 @@ const URL_DB="https://fhjarnogglakehaztbbj.supabase.co", PUBLIC_KEY="sb_publisha
 const root=document.getElementById("root"), identity=document.getElementById("identity");
 if(!window.supabase){root.innerHTML='<div class="banner bad">Supabase client could not load. Check your connection or script blocker.</div>';return;}
 const db=window.supabase.createClient(URL_DB,PUBLIC_KEY,{auth:{persistSession:true,autoRefreshToken:true}});
-const state={user:null,profile:null,tab:"Overview",branch:"all",month:new Date().getDate()<=7?monthOffset(-1):monthOffset(0),jobs:[],expenses:[],ads:[],ledger:[],monthly:[],working:false,claudeQuestion:"",claudeAnswer:"",claudeMessage:"",claudeBrief:"",claudeHelpUrl:"",claudeConfigured:null,claudeSetupError:""};
+const state={user:null,profile:null,tab:"Overview",branch:"all",month:new Date().getDate()<=7?monthOffset(-1):monthOffset(0),jobs:[],expenses:[],ads:[],ledger:[],monthly:[],working:false,claudeQuestion:"",claudeAnswer:"",claudeMessage:"",claudeBrief:"",claudeHelpUrl:"",claudeConfigured:null,claudeSetupError:"",adHealthToday:[],adHealthHistory:[],adHealthLoaded:false,adHealthLoading:false,adHealthError:"",adHealthFetchedAt:""};
 let recoveryMode=false;
 function monthOffset(n){const d=new Date(); d.setDate(1);d.setMonth(d.getMonth()+n);return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")}
 function h(v){return String(v??"").replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]})}
@@ -57,6 +75,7 @@ const results=await Promise.all(q.map(async x=>{const {data,error}=await db.from
 state.working=false;const errors=[];
 for(const r of results){state[r.name]=r.data||[];if(r.error)errors.push(r.name+": "+r.error.message)}
 render(errors);
+if(state.tab==="Ads")await loadAdHealth();
 }
 function shell(){const menus=admin()?["Overview","Jobs","Expenses","Ads","Ledger",...(role()==="owner"?["Claude AI"]:[])]:["Jobs"];
 return '<div class="flex"><div><h1>Finance & Operations</h1><div class="hint">One technician entry → one ledger record → verified monthly reporting.</div></div><div class="flex"><input class="filter" type="month" id="month" value="'+h(state.month)+'"><select class="filter" id="branch"><option value="all">Both branches</option><option value="san_pablo"'+(state.branch==="san_pablo"?" selected":"")+'>San Pablo</option><option value="cavite"'+(state.branch==="cavite"?" selected":"")+'>Cavite</option></select><button class="secondary" id="refresh">↻ Refresh</button></div></div><div class="panel"><nav class="nav">'+menus.map(x=>'<button data-tab="'+x+'" class="'+(state.tab===x?"active":"")+'">'+x+'</button>').join("")+'</nav></div>'}
@@ -171,11 +190,96 @@ return out+table(["Date","Job no.","Branch","Technician","Collected","Direct cos
 }
 function expenseForm(){return '<section class="panel"><h2>Submit branch expense</h2><p class="hint">Record business expenses here. Facebook ads must come through the ads sync, not a second expense entry. Do not double-count parts or labor already entered on jobs.</p><form id="expenseForm"><div class="cols3">'+input("expense_date","Expense date","date",'required value="'+dateLocal()+'"')+'<label>Branch<select name="branch"><option value="san_pablo">San Pablo</option><option value="cavite">Cavite</option><option value="shared">Shared</option></select></label><label>Expense type<select name="category"><option>Vehicle maintenance</option><option>Rent</option><option>Utilities</option><option>Salary / admin payroll</option><option>Tools</option><option>Supplies</option><option>Other operating expense</option></select></label>'+input("amount","Amount ₱","number",'required min="0" step="0.01"')+'<label>Paid by<select name="payer"><option value="jmags">JMAGS</option><option value="investor">Investor supported</option></select></label>'+input("notes","Notes / receipt reference")+'</div><p><button class="primary">Submit expense</button></p></form></section>'}
 function expenses(){const e=currentExpenses().slice().sort((a,b)=>String(b.expense_date).localeCompare(String(a.expense_date)));return expenseForm()+'<section class="panel"><h2>Expense approvals</h2>'+(e.length?table(["Date","Branch","Category","Amount","Paid by","Status","Actions"],e.map(x=>'<tr>'+cell(h(x.expense_date))+cell(h(x.branch))+cell(h(x.category))+cell(money(x.amount))+cell(h(x.payer))+cell(status(x.status))+cell(x.status==="submitted"&&admin()?'<button class="smallbtn" data-verify-expense="'+h(x.id)+'">Verify</button><button class="smallbtn" data-void-expense="'+h(x.id)+'">Void</button>':"")+'</tr>')):'<p class="hint">No expenses recorded for this period.</p>')+'</section>'}
+
+function manilaToday(){
+ const parts=new Intl.DateTimeFormat("en-US",{timeZone:"Asia/Manila",year:"numeric",month:"2-digit",day:"2-digit"}).formatToParts(new Date());
+ const part=k=>parts.find(x=>x.type===k)?.value||"";
+ return [part("year"),part("month"),part("day")].join("-");
+}
+function adMoney(value){return value==null||value===""?"—":money(value)}
+function adTime(value){
+ if(!value)return "—";
+ const d=new Date(value);
+ return Number.isNaN(d.getTime())?"—":d.toLocaleString("en-PH",{timeZone:"Asia/Manila",month:"short",day:"numeric",hour:"numeric",minute:"2-digit",hour12:true});
+}
+function adStatus(value){
+ const s=String(value||"").toLowerCase();
+ return '<span class="ad-status '+(["green","yellow","red"].includes(s)?s:"")+'">'+h(s||"unknown")+'</span>';
+}
+function adAction(value){
+ return {"none":"No change","paused":"Paused","paused_and_replaced":"Paused + replaced","scaled_up":"Scaled up"}[value]||String(value||"—");
+}
+function adHealthPanel(){
+ const today=manilaToday();
+ let out='<section class="panel" id="ad-health-panel"><div class="ad-health-head"><div><h2>Cavite Ad Health</h2><p class="hint">Read-only Meta Ads guardrail status from Claude’s separate monitoring system. Today is '+h(today)+' in Manila. This panel never pauses, replaces or scales an ad.</p></div><button class="secondary" type="button" id="refreshAdHealth"'+(state.adHealthLoading?" disabled":"")+'>'+(state.adHealthLoading?"Refreshing…":"↻ Refresh checks")+'</button></div>';
+ if(state.adHealthError)out+=banner("Unable to load the ad monitoring log: "+h(state.adHealthError),"bad");
+ if(!state.adHealthLoaded&&!state.adHealthError)out+='<p class="hint">Loading Cavite monitoring checks…</p>';
+ const latest=new Map();
+ for(const row of state.adHealthToday){
+   const key=String(row.campaign_id||row.campaign||"");
+   const previous=latest.get(key);
+   if(!previous||String(row.checked_at)>String(previous.checked_at))latest.set(key,row);
+ }
+ const order={red:0,yellow:1,green:2};
+ const cards=[...latest.values()].sort((a,b)=>(order[a.status]??3)-(order[b.status]??3)||String(a.campaign).localeCompare(String(b.campaign)));
+ if(state.adHealthLoaded&&!cards.length){
+   out+='<div class="ad-health-empty">No Cavite guardrail checks logged for today yet. The status is <strong>not yet reported</strong> — it does not mean every campaign is healthy. Refresh after the scheduled check runs.</div>';
+ }else if(cards.length){
+   const counts={red:0,yellow:0,green:0};for(const row of cards){if(counts[row.status]!==undefined)counts[row.status]++;}
+   out+='<p class="hint">Latest check per campaign: '+cards.length+' · Red '+counts.red+' · Yellow '+counts.yellow+' · Green '+counts.green+'</p><div class="ad-health-cards">';
+   for(const row of cards){
+     const st=["red","yellow","green"].includes(row.status)?row.status:"";
+     out+='<article class="ad-health-card '+st+'"><div class="ad-health-head"><div class="health-title">'+h(row.campaign||"Unnamed campaign")+'</div>'+adStatus(row.status)+'</div>';
+     out+='<div class="health-metrics"><div>CPC today<strong>'+adMoney(row.cpc_today)+'</strong></div><div>14-day avg CPC<strong>'+adMoney(row.account_avg_cpc_14d)+'</strong></div><div>Spend today<strong>'+adMoney(row.spend_today)+'</strong></div><div>Action<strong>'+h(adAction(row.action_taken))+'</strong></div></div>';
+     out+='<div class="health-meta">Campaign ID: '+h(row.campaign_id||"—")+'<div>Checked: '+h(adTime(row.checked_at))+' PH time</div>';
+     if(row.replacement_campaign_id)out+='<div>Replacement ID: '+h(row.replacement_campaign_id)+'</div>';
+     out+='</div></article>';
+   }
+   out+='</div>';
+ }
+ out+='<div class="sectiontitle"><h3>Automated action history</h3><span class="hint">Most recent 300 checks · Cavite only</span></div>';
+ const entries=state.adHealthHistory;
+ if(state.adHealthLoaded&&!entries.length)out+='<div class="ad-health-empty">No automated decisions have been logged yet. Once the monitor runs, entries will appear here.</div>';
+ else if(entries.length){
+   const trs=entries.map(r=>'<tr>'+cell(h(r.check_date||"—"))+cell(h(r.campaign||"—"))+cell(adStatus(r.status))+cell(adMoney(r.cpc_today),"right")+cell(adMoney(r.account_avg_cpc_14d),"right")+cell(adMoney(r.spend_today),"right")+cell(h(adAction(r.action_taken)))+cell(h(r.replacement_campaign_id||"—"))+cell(h(adTime(r.checked_at)))+'</tr>');
+   out+=table(["Date","Campaign","Status","CPC today","14d avg CPC","Spend today","Action taken","Replacement campaign ID","Checked (PH)"],trs);
+ }
+ if(state.adHealthFetchedAt)out+='<p class="ad-health-freshness">Data refreshed '+h(adTime(state.adHealthFetchedAt))+' Philippine time. Dashboard updates approximately every minute while open.</p>';
+ out+='<p class="hint">Status colors are reported by the external monitor. A red status is not proof that an action succeeded; review the logged action and verify critical changes in Meta Ads Manager.</p></section>';
+ return out;
+}
+async function loadAdHealth(){
+ if(state.adHealthLoading||!state.user||!admin())return;
+ state.adHealthLoading=true;
+ const today=manilaToday();
+ try{
+   const [todayResult,historyResult]=await Promise.all([
+     db.from("jmags_ad_health")
+       .select("check_date,branch,campaign,campaign_id,status,cpc_today,account_avg_cpc_14d,spend_today,action_taken,replacement_campaign_id,checked_at")
+       .eq("branch","cavite").eq("check_date",today)
+       .order("checked_at",{ascending:false}).limit(300),
+     db.from("jmags_ad_health")
+       .select("check_date,branch,campaign,campaign_id,status,cpc_today,account_avg_cpc_14d,spend_today,action_taken,replacement_campaign_id,checked_at")
+       .eq("branch","cavite").order("check_date",{ascending:false}).order("checked_at",{ascending:false}).order("campaign",{ascending:true}).limit(300)
+   ]);
+   if(todayResult.error||historyResult.error){
+     state.adHealthError=[todayResult.error?.message,historyResult.error?.message].filter(Boolean).join("; ");
+   }else{
+     state.adHealthToday=todayResult.data||[];
+     state.adHealthHistory=historyResult.data||[];
+     state.adHealthLoaded=true;
+     state.adHealthError="";
+     state.adHealthFetchedAt=new Date().toISOString();
+   }
+ }catch(err){state.adHealthError=String(err?.message||"Ad monitoring data unavailable");}
+ finally{state.adHealthLoading=false;if(state.tab==="Ads")render();}
+}
+
 function ads(){const a=currentAds(),j=currentJobs().filter(x=>x.status==="verified"),by={};
 a.forEach(x=>{const k=x.campaign||"Unnamed";if(!by[k])by[k]={spend:0,messages:0};by[k].spend+=n(x.amount);by[k].messages+=n(x.messages)});
 const out=Object.keys(by).sort((a,b)=>by[b].spend-by[a].spend).map(k=>{const x=by[k],jobs=j.filter(y=>y.ad_campaign===k),contrib=sum(jobs,"contribution");
 return '<tr>'+cell(h(k))+cell(money(x.spend),"right")+cell(x.messages.toLocaleString(),"right")+cell(x.messages?money(x.spend/x.messages):"—","right")+cell(jobs.length.toString(),"right")+cell(jobs.length?money(contrib-x.spend):"Not attributed","right")+'</tr>'});
-return '<section class="panel"><h2>Meta Ads • Campaign profitability</h2><p class="hint">Source: Windsor.ai, Cavite ad account. Actual cost per completed repair is shown only when verified jobs use the exact campaign name. A Messenger conversation is not a booking. Synced historical data: October 2026; subsequent days need recurring sync.</p>'+table(["Campaign","Spend","Messages","Cost / message","Linked paid jobs","Contribution after ads"],out)+'</section>'+banner("Decision rule: compare verified job contribution after direct costs against campaign spend before scaling or pausing an ad. Do not assume campaigns without attributed jobs produced no sales.","warn");
+return adHealthPanel()+'<section class="panel"><h2>Meta Ads • Campaign profitability</h2><p class="hint">Source: Windsor.ai, Cavite ad account. Actual cost per completed repair is shown only when verified jobs use the exact campaign name. A Messenger conversation is not a booking. Synced historical data: October 2026; subsequent days need recurring sync.</p>'+table(["Campaign","Spend","Messages","Cost / message","Linked paid jobs","Contribution after ads"],out)+'</section>'+banner("Decision rule: compare verified job contribution after direct costs against campaign spend before scaling or pausing an ad. Do not assume campaigns without attributed jobs produced no sales.","warn");
 }
 function ledger(){const r=currentLedger().slice().sort((a,b)=>String(b.txn_date).localeCompare(String(a.txn_date)));return '<section class="panel"><div class="sectiontitle"><h2>Automatic finance ledger ('+r.length+')</h2><button class="secondary" id="exportCSV">Export CSV</button></div><p class="hint">Positive = sales; negative = cost. Submitted entries appear instantly but are not treated as finalized profit. Ads are recorded once in their own source table.</p>'+(r.length?table(["Date","Branch","Category","Reference","Amount","Status","Source"],r.map(x=>'<tr>'+cell(h(x.txn_date))+cell(h(x.branch))+cell(h(x.category))+cell(h(x.reference))+cell('<b>'+money(x.amount)+'</b>')+cell(status(x.status))+cell(h(x.source))+'</tr>')):'<p>No ledger entries for selected period.</p>')+'</section>'}
 async function saveJob(form){const f=new FormData(form),x={};["job_no","branch","job_date","customer","service","technician","ad_campaign","notes"].forEach(k=>x[k]=String(f.get(k)||"").trim());["collected","parts_cost","driver_cost","assistant_cost","transport_cost","technician_commission","sales_agent_fee","other_job_cost"].forEach(k=>x[k]=n(f.get(k)));x.submitted_by=state.user.id;x.status="submitted";x.source="command_center";if(!x.job_no||!x.job_date)throw Error("Job number and date required");const r=await db.from("jmags_finance_jobs").insert(x);if(r.error)throw r.error;toast("Job submitted. Ledger updated; awaiting verification.");await load()}
@@ -183,7 +287,7 @@ async function saveExpense(form){const f=new FormData(form);const x={expense_dat
 async function approve(table,id,newStatus){if(!admin())return;const fields={status:newStatus,verified_by:state.user.id,verified_at:new Date().toISOString(),updated_at:new Date().toISOString()};const r=await db.from(table).update(fields).eq("id",id).eq("status","submitted").select("id");if(r.error)throw r.error;if(!r.data||!r.data.length)throw Error("Record was already changed or you lack permission");toast("Record "+newStatus+".");await load()}
 function download(){const r=currentLedger(),heads=["Date","Branch","Category","Reference","Amount","Status","Source"];const lines=[heads,...r.map(x=>[x.txn_date,x.branch,x.category,x.reference,x.amount,x.status,x.source])].map(a=>a.map(x=>'"'+String(x??"").replace(/"/g,'""')+'"').join(",")).join("\r\n");const blob=new Blob(["\uFEFF"+lines],{type:"text/csv;charset=utf-8"});const u=window.URL.createObjectURL(blob),a=document.createElement("a");a.href=u;a.download="JMAGS-Ledger-"+state.month+".csv";a.click();window.URL.revokeObjectURL(u)}
 document.addEventListener("submit",async e=>{if(!["loginForm","jobForm","expenseForm","newPasswordForm"].includes(e.target.id))return;e.preventDefault();const b=e.target.querySelector("button[type=submit],button.primary");if(b)b.disabled=true;try{if(e.target.id==="loginForm"){const f=new FormData(e.target),r=await db.auth.signInWithPassword({email:String(f.get("email")),password:String(f.get("password"))});if(r.error)throw r.error;await check()}else if(e.target.id==="newPasswordForm"){const f=new FormData(e.target);if(String(f.get("password"))!==String(f.get("confirm")))throw Error("Passwords do not match.");const r=await db.auth.updateUser({password:String(f.get("password"))});if(r.error)throw r.error;recoveryMode=false;toast("Password changed successfully.");await check()}else if(e.target.id==="jobForm")await saveJob(e.target);else await saveExpense(e.target)}catch(err){toast("Error: "+err.message);const el=document.getElementById("error");if(el)el.textContent=err.message}finally{if(b)b.disabled=false}});
-document.addEventListener("click",async e=>{const b=e.target.closest("button");if(!b)return;try{if(b.id==="signout"){await db.auth.signOut();state.user=null;login();return}if(b.id==="retryLoad"){login();check().catch(showStartupError);return}if(b.id==="signInAgain"){await db.auth.signOut();state.user=null;login();return}if(b.id==="forgotPassword"){const email=document.querySelector('#loginForm input[name="email"]')?.value?.trim();if(!email){const el=document.getElementById("error");if(el)el.textContent="Enter your email first, then click Forgot password.";return}const r=await db.auth.resetPasswordForEmail(email,{redirectTo:"https://jmagsappliances.tech/finance/"});if(r.error)throw r.error;const el=document.getElementById("error");if(el){el.style.color="#16803f";el.textContent="If this email is registered, a password-reset message will arrive. Check your inbox and spam folder."}return}if(b.dataset.claudePrompt){const texts={costs:"How can JMAGS reduce expenses without affecting repair quality?",ads:"Which Facebook ad campaigns should JMAGS investigate before increasing spend?",branch:"What are the biggest finance reporting gaps and risks for this branch?"};const area=document.getElementById("claudeProQuestion");if(area){area.value=texts[b.dataset.claudePrompt]||"";area.focus()}return}if(b.id==="copyClaudePro"){await copyClaudeProBrief();return}if(b.dataset.tab){state.tab=b.dataset.tab;render();/* Claude Pro needs no API calls or activation checks. */return}if(b.id==="refresh"){await load();return}if(b.id==="exportCSV"){download();return}for(const [key,t,st] of [["verifyJob","jmags_finance_jobs","verified"],["voidJob","jmags_finance_jobs","void"],["verifyExpense","jmags_finance_expenses","verified"],["voidExpense","jmags_finance_expenses","void"]])if(b.dataset[key]){if(st==="void"&&!confirm("Void this submission?"))return;await approve(t,b.dataset[key],st);return}}catch(err){toast(err.message)}});
+document.addEventListener("click",async e=>{const b=e.target.closest("button");if(!b)return;try{if(b.id==="signout"){await db.auth.signOut();state.user=null;login();return}if(b.id==="retryLoad"){login();check().catch(showStartupError);return}if(b.id==="signInAgain"){await db.auth.signOut();state.user=null;login();return}if(b.id==="forgotPassword"){const email=document.querySelector('#loginForm input[name="email"]')?.value?.trim();if(!email){const el=document.getElementById("error");if(el)el.textContent="Enter your email first, then click Forgot password.";return}const r=await db.auth.resetPasswordForEmail(email,{redirectTo:"https://jmagsappliances.tech/finance/"});if(r.error)throw r.error;const el=document.getElementById("error");if(el){el.style.color="#16803f";el.textContent="If this email is registered, a password-reset message will arrive. Check your inbox and spam folder."}return}if(b.dataset.claudePrompt){const texts={costs:"How can JMAGS reduce expenses without affecting repair quality?",ads:"Which Facebook ad campaigns should JMAGS investigate before increasing spend?",branch:"What are the biggest finance reporting gaps and risks for this branch?"};const area=document.getElementById("claudeProQuestion");if(area){area.value=texts[b.dataset.claudePrompt]||"";area.focus()}return}if(b.id==="copyClaudePro"){await copyClaudeProBrief();return}if(b.id==="refreshAdHealth"){await loadAdHealth();return}if(b.dataset.tab){state.tab=b.dataset.tab;render();if(state.tab==="Ads")await loadAdHealth();/* Claude Pro needs no API calls or activation checks. */return}if(b.id==="refresh"){await load();return}if(b.id==="exportCSV"){download();return}for(const [key,t,st] of [["verifyJob","jmags_finance_jobs","verified"],["voidJob","jmags_finance_jobs","void"],["verifyExpense","jmags_finance_expenses","verified"],["voidExpense","jmags_finance_expenses","void"]])if(b.dataset[key]){if(st==="void"&&!confirm("Void this submission?"))return;await approve(t,b.dataset[key],st);return}}catch(err){toast(err.message)}});
 document.addEventListener("change",e=>{if(e.target.id==="month"){state.month=e.target.value;state.claudeAnswer="";state.claudeMessage="";state.claudeQuestion="";state.claudeBrief="";render()}if(e.target.id==="branch"){state.branch=e.target.value;state.claudeAnswer="";state.claudeMessage="";state.claudeQuestion="";state.claudeBrief="";render()}});
 db.auth.onAuthStateChange((event,_session)=>{if(event==="PASSWORD_RECOVERY"){recoveryMode=true;showRecovery()}});login();check().catch(showStartupError);
 window.addEventListener("unhandledrejection",event=>{if(root?.textContent?.includes("Loading your secure dashboard"))showStartupError(event.reason||new Error("A service did not respond."))});
