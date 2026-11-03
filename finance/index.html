@@ -708,7 +708,7 @@ document.addEventListener("click",async e=>{
 });
 function ads(){if(role()==="owner"&&!mediaBuyer.loaded&&!mediaBuyer.busy)loadMediaBuyer().then(()=>{if(state.tab==="Ads")render()});return mediaBuyerPanel();}
 
-const liveMediaBuyer={data:null,review:[],loading:false,error:"",loadedAt:0};
+const liveMediaBuyer={data:null,review:[],historical:[],loading:false,error:"",loadedAt:0};
 async function fetchLiveMediaBuyer(){
  if(liveMediaBuyer.loading||!state.user||role()!=="owner")return;
  liveMediaBuyer.loading=true;liveMediaBuyer.error="";
@@ -718,7 +718,7 @@ async function fetchLiveMediaBuyer(){
   const res=await fetch(URL_DB+"/functions/v1/jmags-media-command-center",{method:"GET",headers:{"authorization":"Bearer "+session.access_token,"apikey":PUBLIC_KEY},cache:"no-store"});
   const payload=await res.json();
   if(!res.ok||!payload.ok)throw Error(payload.error||"Media Buyer API unavailable");
-  liveMediaBuyer.data=payload.media_buyer;liveMediaBuyer.review=payload.attribution_review||[];liveMediaBuyer.loadedAt=Date.now();
+  liveMediaBuyer.data=payload.media_buyer;liveMediaBuyer.review=payload.attribution_review||[];liveMediaBuyer.historical=payload.historical_campaigns||[];liveMediaBuyer.loadedAt=Date.now();
  }catch(e){liveMediaBuyer.error=String(e?.message||e)}
  finally{liveMediaBuyer.loading=false;if(state.tab==="AI Media Buyer")render();}
 }
@@ -734,7 +734,7 @@ function liveMediaBuyerPanel(){
 
  out+='<h3>Meta campaign performance · recent 7 days</h3><div class="mb-card-grid">';
  for(const x of d.campaigns||[])out+='<article class="mb-record"><div class="mb-record-title">'+h(x.campaign||"Unnamed campaign")+'</div><div class="mb-facts"><div><small>Spend</small><strong>'+money(Number(x.spend_php||0))+'</strong></div><div><small>Messages</small><strong>'+Number(x.messages||0)+'</strong></div><div><small>Cost / message</small><strong>'+(x.cost_per_message_php==null?"—":money(Number(x.cost_per_message_php)))+'</strong></div></div><small class="mb-muted">Last sync: '+h(x.last_sync?new Date(x.last_sync).toLocaleString("en-PH",{timeZone:"Asia/Manila"}):"—")+'</small></article>';
- out+='</div><h3>Attribution review queue · Cavite only</h3><p class="hint">Read-only review. Submitted is not payment verified. Match exact Meta campaign IDs only with supporting records.</p><div class="mb-card-grid">';
+ out+='</div><h3>Historical Meta campaigns · Cavite</h3><p class="hint">Historical totals from August 1 to November 3, 2026. These are not recent 7-day spending figures. Paused campaigns are analysis-only and will not be automatically resumed.</p><div class="mb-card-grid">';for(const x of liveMediaBuyer.historical||[])out+='<article class="mb-record"><div class="mb-record-heading"><strong>'+h(x.campaign||"—")+'</strong><span class="mb-state">'+h(x.campaign_status||"Unknown")+'</span></div><div class="mb-facts"><div><small>Historical spend</small><strong>'+money(Number(x.spend_php||0))+'</strong></div><div><small>Impressions</small><strong>'+Number(x.impressions||0).toLocaleString("en-PH")+'</strong></div></div></article>';out+='</div><h3>Attribution review queue · Cavite only</h3><p class="hint">Read-only review. Submitted is not payment verified. Match exact Meta campaign IDs only with supporting records.</p><div class="mb-card-grid">';
  for(const j of liveMediaBuyer.review||[])out+='<article class="mb-record"><div class="mb-record-heading"><strong>'+h(j.job_no||"—")+'</strong><span class="mb-state">'+h(j.next_action||"review")+'</span></div><div class="mb-facts"><div><small>Finance status</small><strong>'+h(j.finance_status||"unverified")+'</strong></div><div><small>Collected</small><strong>'+money(Number(j.finance_collected||0))+'</strong></div></div><div class="mb-source"><small>Recorded ad source</small><div>'+h(j.recorded_campaign||j.reported_ad_source||"unknown")+'</div></div></article>';
  out+='</div><p class="hint">Verification queue: '+Number(review.verify_payment||0)+' payments to verify; '+Number(review.check_payment||0)+' payment checks; '+Number(review.review_job||0)+' other job reviews. No automatic attribution or payment verification.</p></section>';
  return out;
