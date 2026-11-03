@@ -322,6 +322,7 @@ function teamGoalPanel(){
  const decisions=(ceoState.teamDecisions||[]).filter(x=>x.goal_id===g.id);
  const council=(ceoState.teamCouncil||[]).filter(x=>x.goal_id===g.id);
  let out='<section class="panel"><h2>AI Management Team · Balanced Growth</h2><p><strong>'+h(g.objective)+'</strong></p><p class="hint">Scope: both branches; Media Buyer: Cavite only. Independent analysis and recommendations; consequential actions require CEO approval.</p>';
+ out+='<p><button id="run-growth-council" type="button">Run five-manager AI council</button> <small class="hint">Generates five evidence-based proposals. No business changes are executed. A recent run cannot be repeated for 3 hours.</small></p>';
  out+='<div class="ledger-kpis"><div class="ledger-kpi"><small>Decision proposals</small><strong>'+decisions.length+'</strong></div><div class="ledger-kpi"><small>Council responses</small><strong>'+council.length+'</strong></div><div class="ledger-kpi"><small>Approved</small><strong>'+decisions.filter(x=>x.status==="approved").length+'</strong></div><div class="ledger-kpi"><small>Executed</small><strong>'+decisions.filter(x=>x.status==="executed"||x.status==="measured").length+'</strong></div></div>';
  if(!decisions.length)out+='<p class="hint">No goal-specific team decisions recorded yet. AI manager reports are not the same as approved or executed decisions.</p>';
  for(const d of decisions.slice(0,8)){out+='<details class="ledger-review"><summary><strong>'+h(d.manager)+'</strong> · '+h(d.status)+' · '+h(d.proposal)+'</summary><p><strong>Reason:</strong> '+h(d.rationale)+'</p><p><strong>Approval:</strong> '+(d.requires_ceo_approval?'CEO required':'Policy controlled')+'</p><pre style="white-space:pre-wrap;overflow-wrap:anywhere">'+h(JSON.stringify(d.evidence||{},null,2))+'</pre></details>';}
@@ -498,6 +499,18 @@ document.addEventListener("submit",async e=>{
  if(!aiResult?.ok)throw new Error(aiResult?.error||"AI response unavailable");
  await loadCeo();render();toast("GPT manager response saved.");
  }catch(err){toast("Message failed: "+err.message);if(button)button.disabled=false}finally{ceoState.busy=false}
+});
+document.addEventListener("click",async e=>{
+ const button=e.target.closest("#run-growth-council");
+ if(!button)return;
+ if(!confirm("Run five AI managers to produce advisory proposals using live JMAGS data? No ad, financial or customer records will be changed."))return;
+ button.disabled=true;button.textContent="AI council running…";
+ try{
+  const {data,error}=await db.functions.invoke("jmags-ai-growth-council",{body:{}});
+  if(error){let detail=null;try{detail=await error.context?.json?.()}catch(_){}throw Error(detail?.error||error.message);}
+  if(!data?.ok)throw Error(data?.error||"Council run unsuccessful");
+  await loadCeo();render();toast("Five manager decisions saved for CEO review.");
+ }catch(err){toast("AI council: "+err.message);button.disabled=false;button.textContent="Run five-manager AI council";}
 });
 document.addEventListener("click",async e=>{
  const b=e.target.closest("button[data-refresh-ceo-chat]");if(!b)return;
