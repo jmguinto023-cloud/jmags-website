@@ -265,13 +265,7 @@ function ceoPanel(){
  out+='<div class="ceo-chat-empty">No meeting messages yet. Run a recorded management meeting to generate an evidence-based discussion.</div>';
  }
  out+='<div class="ceo-chat-footer"><span>Conversation replay: one message about every 3.5 seconds. Saved messages, not live typing.</span><div class="flex"><button type="button" data-show-ceo-chat="yes">Show all</button><button type="button" data-replay-ceo-chat="yes">Replay</button><button type="button" data-refresh-ceo-chat="yes">Refresh</button></div></div></div>';
- out+='<div class="ceo-council">';
- for(const dept of sequence){
- const item=councilActions.find(x=>x.department===dept);
- out+='<div class="ceo-council-turn"><strong>'+h(names[dept])+'</strong><small>'+h(roleQuestion[dept])+'</small><p>'+(item?h(item.rationale):'No recorded recommendation yet.')+'</p>'+(item?'<small>Decision: '+h(item.status||"proposed")+' · '+h(item.action_title)+'</small>':'')+'</div>';
- }
- const finance=councilActions.find(x=>x.department==="finance"),ops=councilActions.find(x=>x.department==="operations"),media=councilActions.find(x=>x.department==="media_buyer");
- out+='<div class="ceo-council-verdict"><strong>Joint recommendation for CEO review</strong><p>Prioritize payment reconciliation and repair capacity before increasing commitments. Validate campaign-to-job attribution before evaluating ad returns. The five department proposals remain individually reviewable; no action is automatically executed.</p><small>Checks: finance '+(finance?'recorded':'missing')+' · operations '+(ops?'recorded':'missing')+' · media '+(media?'recorded':'missing')+'</small></div></div></section>';
+ out+='</section>';
  }
  const needsPay=ceoState.audit.filter(x=>x.sync_state==='needs_payment_verification');const missing=ceoState.audit.filter(x=>x.sync_state==='missing_finance'&&x.ops_status==='done');const mismatches=ceoState.audit.filter(x=>x.quote_minus_collected!==null&&Math.abs(Number(x.quote_minus_collected))>0.01);
  out+='<section class="panel"><h3>Operations ↔ Finance · Live audit</h3><div class="ledger-kpis"><div class="ledger-kpi"><small>Completed, awaiting payment verification</small><strong>'+needsPay.length+'</strong></div><div class="ledger-kpi"><small>Completed jobs missing finance row</small><strong>'+missing.length+'</strong></div><div class="ledger-kpi"><small>Quotation vs collection differences</small><strong>'+mismatches.length+'</strong></div></div><p class="hint">Completed does not mean paid. Differences are flagged, not automatically overwritten. No automatic ledger modifications.</p>'+mismatches.slice(0,8).map(x=>'<p class="hint">'+h(x.job_no)+': quoted '+h(x.ops_quote)+' / collected '+money(x.finance_collected)+' (review)</p>').join('')+'<h3>Owner payment reconciliation</h3><p class="hint">Confirm only after checking payment receipt. This updates Operations and finance together.</p>';
