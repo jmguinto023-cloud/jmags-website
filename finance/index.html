@@ -138,6 +138,7 @@
 .ceo-chat{border:1px solid #64748b;border-radius:17px;overflow:hidden;margin:16px 0;background:rgba(100,116,139,.05)}.ceo-chat-header{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:14px;background:rgba(100,116,139,.13)}.ceo-chat-header small{display:block;margin-top:4px;opacity:.7}.ceo-chat-connection{display:flex;align-items:center;gap:8px;font-size:12px;white-space:nowrap}.ceo-chat-stream{max-height:480px;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:13px}.ceo-chat-message{display:flex;gap:10px;align-items:flex-start}.ceo-chat-avatar{border-radius:50%;padding:9px;background:rgba(100,116,139,.14);font-size:21px}.ceo-chat-bubble{max-width:90%;border:1px solid rgba(100,116,139,.32);border-radius:4px 14px 14px 14px;padding:11px 13px;background:rgba(100,116,139,.08)}.ceo-chat-meta{display:flex;gap:12px;flex-wrap:wrap;align-items:center}.ceo-chat-meta span{font-size:11px;opacity:.7}.ceo-chat-bubble p{margin:8px 0;line-height:1.5}.ceo-chat-bubble small{font-size:11px;opacity:.75}.ceo-chat-message.general_manager{justify-content:flex-end}.ceo-chat-message.general_manager .ceo-chat-avatar{order:2}.ceo-chat-message.general_manager .ceo-chat-bubble{background:rgba(99,102,241,.12);border-radius:14px 4px 14px 14px}.ceo-chat-message.finance .ceo-chat-bubble{border-left:3px solid #16a34a}.ceo-chat-message.sales .ceo-chat-bubble{border-left:3px solid #eab308}.ceo-chat-message.operations .ceo-chat-bubble{border-left:3px solid #06b6d4}.ceo-chat-message.media_buyer .ceo-chat-bubble{border-left:3px solid #f97316}.ceo-chat-empty{padding:32px 18px;text-align:center;opacity:.75}.ceo-chat-footer{display:flex;gap:12px;justify-content:space-between;align-items:center;padding:12px 14px;border-top:1px solid rgba(100,116,139,.2);font-size:12px}.ceo-chat-footer button{white-space:nowrap}
 .ceo-chat-stream .ceo-chat-message{animation:ceoChatReveal .5s ease-out both}@keyframes ceoChatReveal{0%{opacity:0;visibility:hidden;transform:translateY(10px)}100%{opacity:1;visibility:visible;transform:translateY(0)}}@media(prefers-reduced-motion:reduce){.ceo-chat-stream .ceo-chat-message{animation:none!important;opacity:1!important;visibility:visible!important}}
 .ceo-chat-typing{display:flex;align-items:center;gap:10px;animation:ceoTypingWindow 1.8s linear both;min-height:0}.ceo-typing-bubble{display:flex;align-items:center;gap:10px;border-radius:16px;padding:9px 13px;background:rgba(100,116,139,.14)}.ceo-typing-bubble small{font-size:11px;opacity:.7}.ceo-typing-dots{display:flex;gap:4px;align-items:center}.ceo-typing-dots i{width:6px;height:6px;background:currentColor;border-radius:50%;opacity:.45;animation:ceoDotBounce .9s infinite ease-in-out}.ceo-typing-dots i:nth-child(2){animation-delay:.15s}.ceo-typing-dots i:nth-child(3){animation-delay:.3s}@keyframes ceoDotBounce{0%,60%,100%{transform:translateY(0);opacity:.35}30%{transform:translateY(-4px);opacity:1}}@keyframes ceoTypingWindow{0%,85%{opacity:1;visibility:visible;max-height:65px;margin-bottom:0}100%{opacity:0;visibility:hidden;max-height:0;margin-bottom:-13px}}@media(prefers-reduced-motion:reduce){.ceo-chat-typing{display:none!important}.ceo-chat-stream .ceo-chat-message{animation:none!important}}
+.ceo-owner-chat{border:1px solid rgba(100,116,139,.4);border-radius:17px;overflow:hidden;margin:16px 0}.ceo-owner-chat-history{max-height:450px;overflow-y:auto;display:flex;flex-direction:column;gap:10px;padding:14px}.ceo-owner-chat-line{display:flex}.ceo-owner-chat-line.is-ceo{justify-content:flex-end}.ceo-owner-chat-bubble{max-width:88%;border-radius:15px;padding:11px 13px;background:rgba(100,116,139,.12)}.ceo-owner-chat-line.is-ceo .ceo-owner-chat-bubble{background:rgba(99,102,241,.18)}.ceo-owner-chat-bubble p{margin:7px 0;line-height:1.5;white-space:pre-wrap}.ceo-owner-chat-bubble small{font-size:11px;opacity:.7}.ceo-owner-chat-form{padding:14px;border-top:1px solid rgba(100,116,139,.25)}.ceo-owner-chat-form textarea{width:100%}
 </style>
 </head><body>
 <header class="top"><div><div class="logo">JMAGS <span>COMMAND CENTER</span></div><div class="small">Appliances • San Pablo & Cavite • Finance Automation</div></div><div id="identity" class="small"></div></header>
@@ -207,18 +208,19 @@ body+='<div class="foot">Financial reports include verified jobs and expenses on
 }
 
 
-const ceoState={goals:[],actions:[],reasoning:[],audit:[],meetings:[],loaded:false,error:"",busy:false};
+const ceoState={goals:[],actions:[],reasoning:[],audit:[],meetings:[],directChat:[],loaded:false,error:"",busy:false};
 async function loadCeo(){
  if(role()!=="owner")return;
- const [g,a,r,audit,meetings]=await Promise.all([
+ const [g,a,r,audit,meetings,directChat]=await Promise.all([
  db.from("jmags_ceo_goals").select("*").order("created_at",{ascending:false}).limit(30),
  db.from("jmags_ceo_actions").select("*").order("created_at",{ascending:false}).limit(150),
  db.from("jmags_ceo_reasoning").select("*").order("created_at",{ascending:false}).limit(150),
  db.from("jmags_ops_finance_audit").select("job_no,ops_status,finance_status,sync_state,ops_quote,finance_collected,quote_minus_collected,ops_ad_source,finance_ad_campaign,completed_date,ops_payment_status").limit(1000),
- db.from("jmags_ceo_council_messages").select("*").order("created_at",{ascending:false}).limit(200)
+ db.from("jmags_ceo_council_messages").select("*").order("created_at",{ascending:false}).limit(200),
+ db.from("jmags_ceo_direct_chat").select("*").order("id",{ascending:false}).limit(100)
  ]);
- ceoState.goals=g.data||[];ceoState.actions=a.data||[];ceoState.reasoning=r.data||[];ceoState.audit=audit.data||[];ceoState.meetings=meetings.data||[];
- ceoState.error=g.error?.message||a.error?.message||r.error?.message||audit.error?.message||meetings.error?.message||"";
+ ceoState.goals=g.data||[];ceoState.actions=a.data||[];ceoState.reasoning=r.data||[];ceoState.audit=audit.data||[];ceoState.meetings=meetings.data||[];ceoState.directChat=directChat.data||[];
+ ceoState.error=g.error?.message||a.error?.message||r.error?.message||audit.error?.message||meetings.error?.message||directChat.error?.message||"";
  ceoState.loaded=true;
 }
 function ceoPanel(){
@@ -253,6 +255,9 @@ function ceoPanel(){
  const latest=ceoState.meetings.find(x=>Number(x.goal_id)===Number(activeGoal.id));
  out+='<div class="flex"><button type="button" class="primary" data-run-ceo-council="'+h(activeGoal.id)+'">Run recorded management meeting</button><span class="hint">Owner only · evidence-based review · no external actions</span></div>';
  const chatPlayback=window.jmagsChatPlayback||(window.jmagsChatPlayback={meetingId:null,started:0,showAll:false});
+ const ownerMessages=ceoState.directChat.filter(x=>Number(x.goal_id)===Number(activeGoal.id)).slice().reverse();
+ const managerLabels={general_manager:"General Manager",finance:"Finance Manager",sales:"Sales Manager",operations:"Operations Manager",media_buyer:"Media Buyer",ceo:"You"};
+ out+='<section class="ceo-owner-chat"><div class="ceo-chat-header"><div><strong>Message Your AI Managers</strong><small>Direct questions · real database checks · saved replies</small></div><span class="hint">Owner only</span></div><div class="ceo-owner-chat-history" aria-live="polite">'+(ownerMessages.length?ownerMessages.map(x=>'<div class="ceo-owner-chat-line '+(x.department==="ceo"?"is-ceo":"is-manager")+'"><div class="ceo-owner-chat-bubble"><strong>'+h(managerLabels[x.department]||x.department)+'</strong><p>'+h(x.message)+'</p><small>'+h(x.message_kind==="system_analysis"?"Database-based response · no external action":"CEO message")+' · '+h(new Date(x.created_at).toLocaleString("en-PH"))+'</small></div></div>').join(''):'<p class="hint" style="padding:16px">Ask a manager a question to test its response against JMAGS data.</p>')+'</div><form id="ceoDirectChatForm" class="ceo-owner-chat-form"><input type="hidden" name="goal_id" value="'+h(activeGoal.id)+'"><label>Talk to <select name="department"><option value="general_manager">General Manager</option><option value="finance">Finance Manager</option><option value="sales">Sales Manager</option><option value="operations">Operations Manager</option><option value="media_buyer">Media Buyer</option></select></label><label>Your message<textarea name="message" required minlength="3" maxlength="2000" rows="2" placeholder="Finance Manager, how much verified revenue do we have and what is still unverified?"></textarea></label><button class="primary" type="submit">Send message</button><small class="hint">Responses are database-driven checks, not independent LLM reasoning. Sending does not authorize payments, ads, or customer contact.</small></form></section>';
  const meetingCount=new Set(ceoState.meetings.filter(x=>Number(x.goal_id)===Number(activeGoal.id)).map(x=>x.meeting_id)).size;
  out+='<div class="ceo-chat" role="region" aria-label="AI management meeting chat"><div class="ceo-chat-header"><div><strong>Management Team Chat</strong><small>Saved messages · refreshes while open · '+meetingCount+' recorded meetings</small></div><span class="ceo-chat-connection"><span class="ceo-live-dot"></span> Live feed</span></div>';
  if(latest){
@@ -342,6 +347,19 @@ document.addEventListener("click",e=>{
  if(b.hasAttribute("data-show-ceo-chat"))playback.showAll=true;
  else {playback.showAll=false;playback.started=Date.now();}
  render();
+});
+document.addEventListener("submit",async e=>{
+ if(e.target?.id!=="ceoDirectChatForm")return;
+ e.preventDefault();if(role()!=="owner"||ceoState.busy)return;
+ const form=e.target,fd=new FormData(form),msg=String(fd.get("message")||"").trim();
+ if(msg.length<3)return toast("Write a message first");
+ ceoState.busy=true;
+ const button=form.querySelector("button[type=submit]");if(button)button.disabled=true;
+ try{
+ const {error}=await db.rpc("jmags_ceo_message_manager",{p_goal_id:Number(fd.get("goal_id")),p_department:String(fd.get("department")),p_message:msg});
+ if(error)throw error;
+ await loadCeo();render();toast("Manager response saved.");
+ }catch(err){toast("Message failed: "+err.message);if(button)button.disabled=false}finally{ceoState.busy=false}
 });
 document.addEventListener("click",async e=>{
  const b=e.target.closest("button[data-refresh-ceo-chat]");if(!b)return;
@@ -719,6 +737,7 @@ const opsRealtime=db.channel("jmags-finance-live")
  .on("postgres_changes",{event:"*",schema:"public",table:"jmags_finance_jobs"},refreshOpsFinanceSoon)
  .on("postgres_changes",{event:"*",schema:"public",table:"jmags_finance_expenses"},refreshOpsFinanceSoon)
  .on("postgres_changes",{event:"*",schema:"public",table:"app_docs",filter:"collection=eq.jobs"},refreshOpsFinanceSoon)
+ .on("postgres_changes",{event:"INSERT",schema:"public",table:"jmags_ceo_direct_chat"},()=>{if(state.tab==="CEO Goals")loadCeo().then(render).catch(()=>{})})
  .on("postgres_changes",{event:"INSERT",schema:"public",table:"jmags_ceo_council_messages"},()=>{if(state.tab==="CEO Goals")loadCeo().then(render).catch(()=>{})})
  .subscribe();
 window.addEventListener("focus",refreshOpsFinanceSoon);
