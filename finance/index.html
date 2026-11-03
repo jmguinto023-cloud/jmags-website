@@ -313,7 +313,7 @@ async function loadCeo(){
  db.from("jmags_ai_team_council").select("*").order("created_at",{ascending:false}).limit(50)
  ]);
  ceoState.goals=g.data||[];ceoState.actions=a.data||[];ceoState.reasoning=r.data||[];ceoState.audit=audit.data||[];ceoState.meetings=meetings.data||[];ceoState.directChat=directChat.data||[];ceoState.managerRuns=managerRuns.data||[];ceoState.teamGoals=teamGoals.data||[];ceoState.teamDecisions=teamDecisions.data||[];ceoState.teamCouncil=teamCouncil.data||[];
- ceoState.error=g.error?.message||a.error?.message||r.error?.message||audit.error?.message||meetings.error?.message||directChat.error?.message||managerRuns.error?.message||"";
+ ceoState.error=g.error?.message||a.error?.message||r.error?.message||audit.error?.message||meetings.error?.message||directChat.error?.message||managerRuns.error?.message||teamGoals.error?.message||teamDecisions.error?.message||teamCouncil.error?.message||"";
  ceoState.loaded=true;
 }
 function teamGoalPanel(){
@@ -321,7 +321,7 @@ function teamGoalPanel(){
  if(!g)return '<section class="panel"><h2>AI Management Team · Balanced Growth</h2><p class="hint">Goal record not yet loaded. No autonomous actions are implied.</p></section>';
  const decisions=(ceoState.teamDecisions||[]).filter(x=>x.goal_id===g.id);
  const council=(ceoState.teamCouncil||[]).filter(x=>x.goal_id===g.id);
- let out='<section class="panel"><h2>AI Management Team · Balanced Growth</h2><p><strong>'+h(g.objective)+'</strong></p><p class="hint">Scope: both branches; Media Buyer: Cavite only. Independent analysis and recommendations; consequential actions require CEO approval.</p>';
+ let out='<section class="panel"><h2>AI Management Team · Balanced Growth</h2><p><strong>'+h(g.objective)+'</strong></p><p class="hint">Business goal: both branches. Current AI Council evidence: Cavite only. Independent recommendations; consequential actions require CEO approval.</p>';
  out+='<p><button id="run-growth-council" type="button">Run five-manager AI council</button> <small class="hint">Generates five evidence-based proposals. No business changes are executed. A recent run cannot be repeated for 3 hours.</small></p>';
  out+='<div class="ledger-kpis"><div class="ledger-kpi"><small>Decision proposals</small><strong>'+decisions.length+'</strong></div><div class="ledger-kpi"><small>Council responses</small><strong>'+council.length+'</strong></div><div class="ledger-kpi"><small>Approved</small><strong>'+decisions.filter(x=>x.status==="approved").length+'</strong></div><div class="ledger-kpi"><small>Executed</small><strong>'+decisions.filter(x=>x.status==="executed"||x.status==="measured").length+'</strong></div></div>';
  if(!decisions.length)out+='<p class="hint">No goal-specific team decisions recorded yet. AI manager reports are not the same as approved or executed decisions.</p>';
@@ -359,11 +359,11 @@ const cards=names.map(name=>{
  }
  return '<article class="ceo-manager"><strong>'+h(name)+'</strong><p><b>'+h(status)+'</b> · '+h(when)+'</p><small>Mode: '+h(x?.execution_type||"none")+'</small>'+aiSummary+(findings?'<p><b>Findings needing review</b></p><ul>'+findings+'</ul>':'<p class="hint">No flagged findings in this check.</p>')+'<p><b>Recommended next step</b><br>'+h(nextSteps[name])+'</p>'+'<details><summary>Source evidence and full findings</summary><pre style="white-space:pre-wrap;overflow-wrap:anywhere;font-size:12px">'+h(JSON.stringify(x?.evidence||{},null,2))+'\n'+h(JSON.stringify(x?.findings||{},null,2))+'</pre></details></article>';
  }).join("");
- return '<section class="panel"><h2>AI Workforce · Verified Work Monitor</h2><p class="hint">Five department work logs, showing actual recorded execution mode and freshness. AI runs are advisory; findings require human verification.</p><p><strong>Departments: 5 · Needs review: '+needsReview+' · Overdue / failed: '+overdue+' · AI executions current: '+aiRecent+'/5</strong></p><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px">'+cards+'</div><p class="hint">A failed or overdue check is not considered active. No automatic payment, booking or ad changes are performed by these checks.</p></section>';
+ return '<section class="panel"><h2>AI Workforce · Verified Work Monitor</h2><p class="hint">Historical logs from the earlier shared-snapshot system. These are not independent AI Council decisions.</p><p><strong>Departments: 5 · Needs review: '+needsReview+' · Overdue / failed: '+overdue+' · AI executions current: '+aiRecent+'/5</strong></p><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px">'+cards+'</div><p class="hint">A failed or overdue check is not considered active. No automatic payment, booking or ad changes are performed by these checks.</p></section>';
 }
 function ceoPanel(){
  if(!ceoState.loaded&&!ceoState.busy){ceoState.busy=true;loadCeo().then(()=>{ceoState.busy=false;if(state.tab==="CEO Goals")render()}).catch(e=>{ceoState.error=e.message;ceoState.busy=false})}
- let out=teamGoalPanel()+managerWorkPanel()+'<section class="panel"><h2>CEO Goal Engine · Cavite</h2><p class="hint">Create a CEO command; the system calculates a finance-backed plan using live ledger and advertising data. Department proposals are advisory, not automatic staff assignments or Meta writes.</p>';
+ let out=teamGoalPanel()+'<details class="panel"><summary><strong>Historical AI manager logs — earlier repetitive reports</strong></summary>'+managerWorkPanel()+'</details>'+'<section class="panel"><h2>CEO Goal Engine · Cavite</h2><p class="hint">Create a CEO command; the system calculates a finance-backed plan using live ledger and advertising data. Department proposals are advisory, not automatic staff assignments or Meta writes.</p>';
  if(ceoState.error)out+=banner(h(ceoState.error),"bad");
  const hasLiveData=ceoState.loaded&&!ceoState.error;
  const financePending=ceoState.audit.filter(x=>x.sync_state==="needs_payment_verification").length;
