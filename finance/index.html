@@ -143,6 +143,46 @@
 
 /* AI Media Buyer responsive campaign and attribution cards */
 .mb-card-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,290px),1fr));gap:12px;margin:12px 0 22px}.mb-record{min-width:0;padding:15px;border:1px solid #d8e0e9;border-radius:15px;background:#fff;overflow-wrap:anywhere}.mb-record-title{font-weight:750;line-height:1.4;margin-bottom:12px}.mb-record-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:12px;flex-wrap:wrap}.mb-record-heading strong{overflow-wrap:anywhere}.mb-state{font-size:12px;border-radius:99px;padding:5px 9px;background:#eef2f7;color:#334155;overflow-wrap:anywhere}.mb-facts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-bottom:12px}.mb-facts>div{min-width:0}.mb-facts small,.mb-source small,.mb-muted{display:block;color:#64748b;font-size:12px;margin-bottom:4px}.mb-facts strong{font-size:16px;overflow-wrap:anywhere}.mb-source{border-top:1px solid #e5e7eb;padding-top:10px;overflow-wrap:anywhere}.mb-source div{line-height:1.4}@media(max-width:600px){.mb-card-grid{grid-template-columns:minmax(0,1fr)}.mb-record{padding:14px}.mb-facts strong{font-size:15px}}
+
+/* JMAGS distinctive Command Center visual system — 2026-11 */
+:root{--jm-navy:#101c32;--jm-ink:#15243b;--jm-green:#b7f34b;--jm-blue:#3979ec;--jm-violet:#8463df;--jm-cyan:#10a7c6;--jm-orange:#f49b36;--jm-rose:#e7678b;background:#f0f4fa}
+body{background:linear-gradient(145deg,#eaf1fb 0%,#f6f8fc 38%,#edf4f5 100%);color:var(--jm-ink)}
+.top{background:linear-gradient(110deg,#0c172b,#192c4b 70%,#183b41);border-bottom:3px solid var(--jm-green);box-shadow:0 8px 24px #101c3220}
+.logo{letter-spacing:.5px}.logo span{color:var(--jm-green)}
+.wrap{max-width:1480px}
+.nav{display:grid;grid-template-columns:repeat(auto-fit,minmax(125px,1fr));gap:8px;padding:12px;border-radius:17px;background:#e4ebf5;border:1px solid #d4dfeb}
+.nav button{display:flex;align-items:center;justify-content:center;text-align:center;min-height:43px;padding:9px 11px;border-radius:10px;border:1px solid #d6e0ec;background:#fff;color:#253951;font-size:12px;font-weight:750;line-height:1.25;transition:background .15s,transform .15s,box-shadow .15s}
+.nav button:hover{transform:translateY(-1px);box-shadow:0 4px 12px #17233718}
+.nav button.active{background:#142640;border-color:#142640;color:#d4ff89;box-shadow:inset 0 -3px 0 var(--jm-green),0 5px 12px #14264028}
+.panel{border:1px solid #dce5f1;border-radius:19px;box-shadow:0 8px 25px #182e4710;padding:22px}
+.panel:has(h2){border-top:4px solid var(--jm-blue)}
+.panel:has(h2:first-child){border-top-color:var(--jm-violet)}
+.panel:has(h2) h2{color:#172b48;letter-spacing:-.35px}
+.panel:has(h2) h2:before{content:"";display:inline-block;width:7px;height:19px;background:var(--jm-blue);border-radius:5px;margin-right:10px;vertical-align:-3px}
+.panel:has(h2):has(.ledger-kpis){border-top-color:var(--jm-cyan)}
+.panel:has(h2):has(.ledger-kpis) h2:before{background:var(--jm-cyan)}
+.panel:has(h2):has(.mb-card-grid){border-top-color:var(--jm-green)}
+.panel:has(h2):has(.mb-card-grid) h2:before{background:#80b92a}
+.metric,.ledger-kpi{background:linear-gradient(145deg,#fff,#f5f9ff);border:1px solid #dce6f3;border-radius:14px;box-shadow:0 3px 10px #20385408}
+.metric:nth-child(5n+1),.ledger-kpi:nth-child(5n+1){border-top:3px solid var(--jm-blue)}
+.metric:nth-child(5n+2),.ledger-kpi:nth-child(5n+2){border-top:3px solid var(--jm-green)}
+.metric:nth-child(5n+3),.ledger-kpi:nth-child(5n+3){border-top:3px solid var(--jm-violet)}
+.metric:nth-child(5n+4),.ledger-kpi:nth-child(5n+4){border-top:3px solid var(--jm-orange)}
+.metric:nth-child(5n),.ledger-kpi:nth-child(5n){border-top:3px solid var(--jm-cyan)}
+.sectiontitle{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
+.sectiontitle h2{margin:0}
+.sectiontitle button,.flex button,button.primary,button.secondary{min-height:39px;display:inline-flex;align-items:center;justify-content:center;text-align:center;gap:6px;white-space:normal;line-height:1.2;font-weight:750}
+button.primary{background:#1c55aa;border:1px solid #1c55aa;box-shadow:0 3px 8px #1c55aa22}
+button.secondary{background:#f4f8ff;border:1px solid #cad9ef;color:#224f91}
+button:focus-visible,.nav button:focus-visible{outline:3px solid #86c6ff;outline-offset:2px}
+.mb-record{border-top:3px solid var(--jm-violet);box-shadow:0 4px 12px #1c355012}
+.mb-record:nth-child(3n+2){border-top-color:var(--jm-cyan)}
+.mb-record:nth-child(3n){border-top-color:var(--jm-orange)}
+.banner{border-radius:12px}.warn{border-left-color:#e6a52b}.good{border-left-color:#24a16c}.bad{border-left-color:#e05c62}
+th{background:#eaf0f9;color:#28415f}tbody tr:nth-child(even){background:#f8faff}
+input,select,textarea{border-radius:11px}
+@media(max-width:760px){.wrap{padding:12px}.top{padding:15px 14px}.nav{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;padding:8px}.nav button{min-height:44px;padding:9px 7px;font-size:11px}.panel{padding:15px;margin:12px 0}.sectiontitle{align-items:stretch}.sectiontitle h2{flex:1 1 100%}.sectiontitle button{flex:1 1 auto;max-width:100%}.grid{grid-template-columns:repeat(2,minmax(0,1fr))}.mb-card-grid{grid-template-columns:minmax(0,1fr)}}
+@media(max-width:380px){.nav button{font-size:10.5px}.grid{grid-template-columns:minmax(0,1fr)}}
 </style>
 </head><body>
 <header class="top"><div><div class="logo">JMAGS <span>COMMAND CENTER</span></div><div class="small">Appliances • San Pablo & Cavite • Finance Automation</div></div><div id="identity" class="small"></div></header>
