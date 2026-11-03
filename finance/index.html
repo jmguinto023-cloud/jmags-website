@@ -235,7 +235,10 @@ function managerWorkPanel(){
  "Media Buyer":"Inspect campaigns with spend but no recorded messages; do not pause or increase budgets without policy approval.",
  "General Manager":"Review department exceptions, assign investigation priorities, and request evidence of resolution."
  };
- const cards=names.map(name=>{
+ const recent=names.map(name=>ceoState.managerRuns.find(x=>x.manager===name));
+ const overdue=recent.filter(x=>!x||x.status!=='completed'||Date.now()-new Date(x.finished_at).getTime()>7200000).length;
+ const needsReview=recent.filter(x=>Object.values(x?.findings||{}).some(v=>v===true||(typeof v==='number'&&v>0))).length;
+const cards=names.map(name=>{
  const x=ceoState.managerRuns.find(v=>v.manager===name);
  const hours=x?(Date.now()-new Date(x.finished_at).getTime())/3600000:Infinity;
  const status=!x?"NO RUN":x.status!=="completed"?"FAILED":hours>2?"OVERDUE":"CHECK COMPLETE";
@@ -243,7 +246,7 @@ function managerWorkPanel(){
  const findings=Object.entries(x?.findings||{}).filter(([key,value])=>labels[key]&&(value===true||(typeof value==="number"&&value>0))).map(([key,value])=>'<li>'+h(labels[key])+': <strong>'+h(String(value))+'</strong></li>').join("");
  return '<article class="ceo-manager"><strong>'+h(name)+'</strong><p><b>'+h(status)+'</b> · '+h(when)+'</p><small>Mode: '+h(x?.execution_type||"none")+'</small>'+(findings?'<p><b>Findings needing review</b></p><ul>'+findings+'</ul>':'<p class="hint">No flagged findings in this check.</p>')+'<p><b>Recommended next step</b><br>'+h(nextSteps[name])+'</p>'+'<details><summary>Source evidence and full findings</summary><pre style="white-space:pre-wrap;overflow-wrap:anywhere;font-size:12px">'+h(JSON.stringify(x?.evidence||{},null,2))+'\n'+h(JSON.stringify(x?.findings||{},null,2))+'</pre></details></article>';
  }).join("");
- return '<section class="panel"><h2>AI Workforce · Verified Work Monitor</h2><p class="hint">Five scheduled database audits. Findings require human verification. Mode rules_based is NOT independent generative AI.</p><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px">'+cards+'</div><p class="hint">A failed or overdue check is not considered active. No automatic payment, booking or ad changes are performed by these checks.</p></section>';
+ return '<section class="panel"><h2>AI Workforce · Verified Work Monitor</h2><p class="hint">Five scheduled database audits. Findings require human verification. Mode rules_based is NOT independent generative AI.</p><p><strong>Departments: 5 · Needs review: '+needsReview+' · Overdue / failed: '+overdue+' · Generative AI: inactive</strong></p><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px">'+cards+'</div><p class="hint">A failed or overdue check is not considered active. No automatic payment, booking or ad changes are performed by these checks.</p></section>';
 }
 function ceoPanel(){
  if(!ceoState.loaded&&!ceoState.busy){ceoState.busy=true;loadCeo().then(()=>{ceoState.busy=false;if(state.tab==="CEO Goals")render()}).catch(e=>{ceoState.error=e.message;ceoState.busy=false})}
