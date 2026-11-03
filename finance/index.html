@@ -381,18 +381,39 @@ async function loadAdHealth(){
 }
 
 const mediaBuyer={rows:[],events:[],loaded:false,error:"",busy:false};
+let balancedPolicy=null,balancedVerifiedJobs=0,balancedAttributedJobs=0;
+async function loadBalancedPolicy(){
+ if(!state.user||role()!=="owner")return;
+ const [p,j]=await Promise.all([
+  db.from("jmags_media_buyer_policy").select("mode,meta_writes_enabled,requires_owner_approval,min_verified_attributed_jobs,max_budget_change_pct,max_account_daily_budget_php,protect_winners,require_meta_readback").eq("branch","cavite").maybeSingle(),
+  db.from("jmags_finance_jobs").select("ad_campaign").eq("branch","cavite").eq("status","verified").limit(1000)
+ ]);
+ balancedPolicy=p.data||null;
+ balancedVerifiedJobs=(j.data||[]).length;
+ balancedAttributedJobs=(j.data||[]).filter(x=>String(x.ad_campaign||"").trim()).length;
+}
 async function loadMediaBuyer(){
  if(!state.user||role()!=="owner")return;
  const [decisions,events]=await Promise.all([
   db.from("jmags_ad_decisions").select("id,branch,campaign,campaign_id,proposed_action,rationale,evidence_window,risk_notes,status,execution_state,execution_note,execution_params,created_at,reviewed_at").order("created_at",{ascending:false}).limit(80),
   db.from("jmags_ad_decision_events").select("id,decision_id,event_type,statement,created_at").order("created_at",{ascending:false}).limit(120)
  ]);
- mediaBuyer.error=decisions.error?.message||events.error?.message||"";mediaBuyer.rows=decisions.data||[];mediaBuyer.events=events.data||[];mediaBuyer.loaded=true;
+ mediaBuyer.error=decisions.error?.message||events.error?.message||"";mediaBuyer.rows=decisions.data||[];mediaBuyer.events=events.data||[];mediaBuyer.loaded=true;await loadBalancedPolicy();
 }
 function mediaBuyerPanel(){
  if(role()!=="owner")return "";
  let out='<section class="panel" id="media-buyer"><h2>JMAGS AI Media Buyer · Decisions & Activity</h2><p class="hint">Decisions are proposals only. Approved Pause/Scale/Reduce decisions authorize the scheduled execution agent; Keep and other decisions do not change Meta automatically. Review campaign results and actual paid-job contribution before approving. Winning ads and their social proof remain protected.</p>';
  if(mediaBuyer.error)out+=banner(h(mediaBuyer.error),"bad");
+ const bp=balancedPolicy;
+ out+='<div class="banner '+(bp&&bp.meta_writes_enabled?'warn':'good')+'"><strong>Balanced policy · Cavite:</strong> '+(bp?(bp.meta_writes_enabled?'Meta writes enabled':'Meta writes locked until verified'):'Loading policy')+'</div>';
+ out+='<div class="ledger-kpis">'+
+ '<div class="ledger-kpi"><small>Verified Cavite repairs</small><strong>'+balancedVerifiedJobs+'</strong></div>'+
+ '<div class="ledger-kpi"><small>Campaign-attributed verified repairs</small><strong>'+balancedAttributedJobs+'</strong></div>'+
+ '<div class="ledger-kpi"><small>Minimum attributed repairs</small><strong>'+(bp?Number(bp.min_verified_attributed_jobs):'—')+'</strong></div>'+
+ '<div class="ledger-kpi"><small>Max budget change</small><strong>'+(bp?Number(bp.max_budget_change_pct)+'%':'—')+'</strong></div>'+
+ '</div>';
+ out+='<p class="hint"><strong>Owner policy:</strong> Routine monitoring and written reasoning run automatically. Pause, scale, reduce, and creative changes require owner review. Winning campaigns are protected. Meta actions are blocked until campaign-attributed verified jobs, a defined account spending cap, and readback checks are available. No unverified ROI claims.</p>';
+ if(bp&&!bp.meta_writes_enabled)out+='<div class="banner warn">Meta execution is currently disabled. This is intentional: verified campaign attribution and the account budget cap must be established before any automatic writes.</div>';
  out+='<div class="banner warn"><strong>Execution lock:</strong> Approving a Pause/Scale/Reduce proposal authorizes a separate execution step; it is not proof of execution. Check the execution status and Meta readback before assuming changes took effect.</div>';
  out+='<details><summary><strong>Create a media-buyer decision proposal</strong></summary><form id="mediaBuyerForm"><div class="row"><div><label>Branch<select name="branch"><option value="cavite">Cavite</option><option value="san_pablo">San Pablo</option></select></label><label>Campaign name<input name="campaign" required minlength="3" maxlength="200"></label><label>Meta campaign ID<input name="campaign_id" required maxlength="80"></label></div><div><label>Recommendation<select name="proposed_action"><option value="keep">Keep unchanged</option><option value="test">Test separately</option><option value="scale">Scale budget</option><option value="reduce">Reduce budget</option><option value="pause">Pause</option><option value="creative_change">Change creative</option><option value="restart">Restart</option><option value="duplicate">Duplicate</option></select></label><label>Budget type (only for Scale/Reduce)<select name="budget_type"><option value="">No budget change</option><option value="daily">Daily budget</option><option value="lifetime">Lifetime budget</option></select></label><label>Proposed new budget in PHP (Scale/Reduce only)<input name="budget_php" type="number" min="1" step="0.01" placeholder="e.g. 500"></label><p class="hint">A budget recommendation must specify the exact final budget before owner approval. No automatic creative or duplication actions.</p><label>Evidence period<input name="evidence_window" placeholder="Last 7 completed days" required maxlength="100"></label><label>Risk / learning-phase notes<textarea name="risk_notes" rows="2" required maxlength="1500"></textarea></label></div></div><label>Evidence and reasoning<textarea name="rationale" rows="3" required minlength="12" maxlength="3000" placeholder="Performance, message quality, paid jobs, and why this action is justified"></textarea></label><button class="primary" type="submit">Save proposal for owner review</button></form></details>';
  if(!mediaBuyer.loaded)out+='<p class="hint">Decision queue loading…</p>';
