@@ -204,17 +204,18 @@ body+='<div class="foot">Financial reports include verified jobs and expenses on
 }
 
 
-const ceoState={goals:[],actions:[],reasoning:[],audit:[],loaded:false,error:"",busy:false};
+const ceoState={goals:[],actions:[],reasoning:[],audit:[],meetings:[],loaded:false,error:"",busy:false};
 async function loadCeo(){
  if(role()!=="owner")return;
- const [g,a,r,audit]=await Promise.all([
+ const [g,a,r,audit,meetings]=await Promise.all([
  db.from("jmags_ceo_goals").select("*").order("created_at",{ascending:false}).limit(30),
  db.from("jmags_ceo_actions").select("*").order("created_at",{ascending:false}).limit(150),
  db.from("jmags_ceo_reasoning").select("*").order("created_at",{ascending:false}).limit(150),
- db.from("jmags_ops_finance_audit").select("job_no,ops_status,finance_status,sync_state,ops_quote,finance_collected,quote_minus_collected,ops_ad_source,finance_ad_campaign,completed_date,ops_payment_status").limit(1000)
+ db.from("jmags_ops_finance_audit").select("job_no,ops_status,finance_status,sync_state,ops_quote,finance_collected,quote_minus_collected,ops_ad_source,finance_ad_campaign,completed_date,ops_payment_status").limit(1000),
+ db.from("jmags_ceo_council_messages").select("*").order("created_at",{ascending:false}).limit(200)
  ]);
- ceoState.goals=g.data||[];ceoState.actions=a.data||[];ceoState.reasoning=r.data||[];ceoState.audit=audit.data||[];
- ceoState.error=g.error?.message||a.error?.message||r.error?.message||audit.error?.message||"";
+ ceoState.goals=g.data||[];ceoState.actions=a.data||[];ceoState.reasoning=r.data||[];ceoState.audit=audit.data||[];ceoState.meetings=meetings.data||[];
+ ceoState.error=g.error?.message||a.error?.message||r.error?.message||audit.error?.message||meetings.error?.message||"";
  ceoState.loaded=true;
 }
 function ceoPanel(){
@@ -246,6 +247,12 @@ function ceoPanel(){
  const sequence=["sales","operations","finance","media_buyer","general_manager"];
  const roleQuestion={sales:"How do we win enough bookings?",operations:"Can our repair capacity support the sales plan?",finance:"Will this protect cash flow and profit?",media_buyer:"Can advertising support this within existing limits?",general_manager:"What is the coordinated decision?"};
  out+='<section class="panel"><h3>Management Council · Goal #'+h(activeGoal.id)+'</h3><p class="hint">Five departmental positions are compared below. This is a rule-based synthesis of recorded proposals, not a live LLM conversation or autonomous meeting. Every decision requires owner review.</p><p><strong>CEO command:</strong> '+h(activeGoal.command)+'</p>';
+ const latest=ceoState.meetings.find(x=>Number(x.goal_id)===Number(activeGoal.id));
+ out+='<div class="flex"><button type="button" class="primary" data-run-ceo-council="'+h(activeGoal.id)+'">Run recorded management meeting</button><span class="hint">Owner only · evidence-based review · no external actions</span></div>';
+ if(latest){
+ const turns=ceoState.meetings.filter(x=>x.meeting_id===latest.meeting_id).sort((a,b)=>a.turn_no-b.turn_no);
+ out+='<div class="ceo-council"><h4>Recorded meeting · '+h(new Date(latest.created_at).toLocaleString("en-PH"))+'</h4>'+turns.map(x=>'<div class="ceo-council-turn"><strong>'+h(names[x.department]||x.department)+'</strong><small>'+h(x.message_type)+'</small><p>'+h(x.message)+'</p></div>').join('')+'</div>';
+ }
  out+='<div class="ceo-council">';
  for(const dept of sequence){
  const item=councilActions.find(x=>x.department===dept);
@@ -321,6 +328,16 @@ document.addEventListener("submit",async e=>{
  for(const [dept,title,reason] of proposals){const rr=await db.rpc("jmags_ceo_propose_action",{p_goal_id:id,p_department:dept,p_title:title,p_rationale:reason,p_evidence:{verified_revenue:revenue,ad_spend:spend,verified_jobs:monthJobs.length,attributed_jobs:attributed,submitted_jobs:unverified,ops_done:opsDone.length,payment_verification_pending:unpaid,quote_discrepancies:discrepancy,ops_named_ad_sources:matchable,confidence:monthJobs.length>5?"limited":"low",month}});if(rr.error)throw rr.error;}
  await loadCeo();toast("CEO goal and five department plans saved. No Meta writes.");render();
  }catch(err){toast("Goal setup issue: "+err.message);await loadCeo();render()}finally{ceoState.busy=false}
+});
+document.addEventListener("click",async e=>{
+ const b=e.target.closest("button[data-run-ceo-council]");if(!b)return;
+ if(role()!=="owner"||ceoState.busy)return toast("Owner only or meeting already running");
+ ceoState.busy=true;b.disabled=true;
+ try{
+ const {data,error}=await db.rpc("jmags_ceo_run_council",{p_goal_id:Number(b.dataset.runCeoCouncil)});
+ if(error)throw error;
+ await loadCeo();render();toast("Recorded management meeting saved for CEO review.");
+ }catch(err){toast("Council meeting failed: "+err.message)}finally{ceoState.busy=false;b.disabled=false}
 });
 document.addEventListener("click",async e=>{
  const b=e.target.closest("button[data-ceo-review]");if(!b)return;
