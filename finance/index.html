@@ -516,7 +516,7 @@ document.addEventListener("click",async e=>{
  button.disabled=true;button.textContent="AI council running…";
  try{
   const {data,error}=await db.functions.invoke("jmags-ai-growth-council",{body:{}});
-  if(error){let detail=null;try{detail=await error.context?.json?.()}catch(_){}throw Error(detail?.error||error.message);}
+  if(error){let detail=null;try{detail=await error.context?.json?.()}catch(_){}const status=error.context?.status;const cause=error.context?.statusText;throw Error((detail?.error||error.message)+(status?" (HTTP "+status+(cause?" "+cause:"")+")":" (no HTTP response: check browser network/CORS or function gateway)"));}
   if(!data?.ok)throw Error(data?.error||"Council run unsuccessful");
   await loadCeo();render();toast("Five manager decisions saved for CEO review.");
  }catch(err){toast("AI council: "+err.message);button.disabled=false;button.textContent="Run five-manager AI council";}
