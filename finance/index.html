@@ -349,54 +349,6 @@ function adStrategyDetail(record){
  html+=copies.length?'<ul>'+copies.map(x=>'<li>'+h(x)+'</li>').join("")+'</ul>':'<p>None recorded yet.</p>';
  return html+'</details>';
 }
-function adHealthPanel(){
- const today=manilaToday();
- const localHour=Number(new Intl.DateTimeFormat("en-GB",{timeZone:"Asia/Manila",hour:"2-digit",hourCycle:"h23"}).format(new Date()));
- let out='<section class="panel" id="ad-health-panel"><div class="ad-health-head"><div><h2>Cavite Ad Health</h2><p class="hint">Messaging-efficiency monitoring from the separate Cavite Meta Ads guardrail system. Status colors come from its own checks, not from the dashboard. Today: '+h(today)+' (Manila). This panel is read-only.</p></div><button class="secondary" type="button" id="refreshAdHealth"'+(state.adHealthLoading?" disabled":"")+'>'+(state.adHealthLoading?"Refreshing…":"↻ Refresh checks")+'</button></div>';
- out+='<div class="panel" style="margin:12px 0;border:1px solid #b9d8f6;background:#f6faff"><h3>ChatGPT Ads Control — Learning Phase Protection</h3><p class="hint">Owner policy saved. This is a read-only policy and monitoring panel; separate Meta-writing automations must be audited before enforcement can be confirmed.</p><div class="cols3"><div><strong>AI monitoring</strong><p class="green">Allowed (read-only)</p></div><div><strong>Protect winning ads</strong><p class="green">Policy saved</p></div><div><strong>Automatic duplication / restart</strong><p class="red">Prohibited; enforcement unverified</p></div><div><strong>Creative replacement</strong><p>Owner approval required</p></div><div><strong>Pause or budget changes</strong><p>Owner approval required</p></div><div><strong>New creative tests</strong><p>Separate tests with approval</p></div></div><p class="hint">No Meta campaign changes can be made from this panel. Existing records remain intact.</p></div>';
- if(state.adHealthError)out+=banner("Unable to load the ad monitoring log: "+h(state.adHealthError),"bad");
- if(!state.adHealthLoaded&&!state.adHealthError)out+='<p class="hint">Loading Cavite monitoring checks…</p>';
- const latest=new Map();
- for(const r of state.adHealthToday){
-   const id=String(r.campaign_id||r.campaign||"");
-   const prior=latest.get(id);
-   if(!prior||String(r.checked_at)>String(prior.checked_at))latest.set(id,r);
- }
- const stateById=new Map();
- for(const record of state.adHealthStrategy){
-   if(record.campaign_id)stateById.set(String(record.campaign_id),record);
- }
- const rank={red:0,yellow:1,green:2};
- const cards=[...latest.values()].sort((a,b)=>(rank[a.status]??3)-(rank[b.status]??3)||String(a.campaign).localeCompare(String(b.campaign)));
- if(state.adHealthLoaded&&!cards.length){
-   if(localHour>=19)out+=banner("Monitoring warning: No Cavite ad-health checks have been recorded today, even though 5 AM, 10 AM and 6 PM runs were expected. The automatic ad monitor is NOT VERIFIED as running; check the external scheduler before relying on campaign changes.","warn");
-   else out+='<div class="ad-health-empty">No Cavite guardrail checks logged for today yet. The status is <strong>not yet reported</strong> — it does not mean every campaign is healthy. Refresh after a scheduled check.</div>';
- }else if(cards.length){
-   const counts={red:0,yellow:0,green:0};for(const r of cards)if(counts[r.status]!==undefined)counts[r.status]++;
-   out+='<p class="hint">Latest check per campaign: '+cards.length+' · Red '+counts.red+' · Yellow '+counts.yellow+' · Green '+counts.green+'</p><div class="ad-health-cards">';
-   for(const r of cards){
-     const st=["red","yellow","green"].includes(r.status)?r.status:"";
-     out+='<article class="ad-health-card '+st+'"><div class="ad-health-head"><div class="health-title">'+h(r.campaign||"Unnamed campaign")+'</div>'+adStatus(r.status)+'</div>';
-     out+='<div class="ad-health-primary"><div>Messages today<strong>'+adMessageCount(r.messages_today)+'</strong></div><div>Cost / message today<strong>'+adMoney(r.cost_per_message_today)+'</strong></div></div>';
-     out+='<div class="ad-health-secondary"><span>14-day avg cost / message<strong>'+adMoney(r.account_avg_cost_per_message_14d)+'</strong></span><span>Spend today<strong>'+adMoney(r.spend_today)+'</strong></span><span>CPC today<strong>'+adMoney(r.cpc_today)+'</strong></span><span>14-day avg CPC<strong>'+adMoney(r.account_avg_cpc_14d)+'</strong></span></div>';
-     out+='<div class="ad-health-reasoning"><strong>Why this status / decision</strong><p>'+h(r.reasoning||"No explanation logged for this check yet.")+'</p></div>';
-     out+='<div class="health-meta">Action: <strong>'+h(adAction(r.action_taken))+'</strong><div>'+adCreativeTag(r)+'</div><div>Campaign ID: '+h(r.campaign_id||"—")+'</div><div>Checked: '+h(adTime(r.checked_at))+' PH time</div>';
-     if(r.replacement_campaign_id)out+='<div>Replacement ID: '+h(r.replacement_campaign_id)+'</div>';
-     out+='</div>'+adStrategyDetail(stateById.get(String(r.campaign_id||"")))+'</article>';
-   }
-   out+='</div>';
- }
- out+='<div class="sectiontitle"><h3>Automated action history</h3><span class="hint">Most recent 300 checks · Cavite only</span></div>';
- if(state.adHealthLoaded&&!state.adHealthHistory.length)out+='<div class="ad-health-empty">No automated decisions have been logged yet. Once the monitor runs, entries will appear here.</div>';
- else if(state.adHealthHistory.length){
-   const rows=state.adHealthHistory.map(r=>'<tr>'+cell(h(r.check_date||"—"))+cell(h(r.campaign||"—"))+cell(adStatus(r.status))+cell(adMessageCount(r.messages_today),"right")+cell(adMoney(r.cost_per_message_today),"right")+cell(adMoney(r.account_avg_cost_per_message_14d),"right")+cell(adMoney(r.spend_today),"right")+cell(adMoney(r.cpc_today),"right")+cell(adMoney(r.account_avg_cpc_14d),"right")+cell(h(adAction(r.action_taken)))+cell(r.reasoning?'<details class="ad-reason-details"><summary>See reasoning</summary><p>'+h(r.reasoning)+'</p></details>':"—")+cell(adCreativeCell(r))+cell(h(r.replacement_campaign_id||"—"))+cell(h(adTime(r.checked_at)))+'</tr>');
-   out+='<div class="ad-health-log">'+table(["Date","Campaign","Status","Messages today","Cost / msg today","14d avg cost / msg","Spend today","CPC today","14d avg CPC","Action taken","Reasoning","Creative refreshed","Replacement ID","Checked (PH)"],rows)+'</div>';
- }
- if(state.adHealthStrategyError)out+='<p class="hint">Optional creative history is unavailable: '+h(state.adHealthStrategyError)+'</p>';
- if(state.adHealthFetchedAt)out+='<p class="ad-health-freshness">Data refreshed '+h(adTime(state.adHealthFetchedAt))+' Philippine time. Dashboard updates approximately every minute while open.</p>';
- out+='<p class="hint"><strong>Action meanings:</strong> Steady = no change. Historical labels describe earlier monitoring reports, not current permitted actions. Automatic duplication, pausing, restarts, creative replacements, and budget changes require explicit owner approval. Always verify actual account changes in Meta Ads Manager.</p></section>';
- return out;
-}
 async function loadAdHealth(){
  if(state.adHealthLoading||!state.user||!admin())return;
  state.adHealthLoading=true;
