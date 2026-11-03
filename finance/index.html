@@ -185,7 +185,7 @@ async function loadCeo(){
  db.from("jmags_ceo_goals").select("*").order("created_at",{ascending:false}).limit(30),
  db.from("jmags_ceo_actions").select("*").order("created_at",{ascending:false}).limit(150),
  db.from("jmags_ceo_reasoning").select("*").order("created_at",{ascending:false}).limit(150),
- db.from("jmags_ops_finance_audit").select("job_no,ops_status,finance_status,sync_state,ops_quote,finance_collected,quote_minus_collected,ops_ad_source,finance_ad_campaign,completed_date").limit(1000)
+ db.from("jmags_ops_finance_audit").select("job_no,ops_status,finance_status,sync_state,ops_quote,finance_collected,quote_minus_collected,ops_ad_source,finance_ad_campaign,completed_date,ops_payment_status").limit(1000)
  ]);
  ceoState.goals=g.data||[];ceoState.actions=a.data||[];ceoState.reasoning=r.data||[];ceoState.audit=audit.data||[];
  ceoState.error=g.error?.message||a.error?.message||r.error?.message||audit.error?.message||"";
@@ -197,7 +197,11 @@ function ceoPanel(){
  if(ceoState.error)out+=banner(h(ceoState.error),"bad");
  out+='<form id="ceoGoalForm"><label>Owner command<textarea name="command" required minlength="12" placeholder="Increase Cavite sales by ₱200,000 this month"></textarea></label><div class="flex"><label>Goal type<select name="target_type"><option value="additional_revenue">Additional revenue above current run-rate</option><option value="total_revenue">Total revenue target</option></select></label><label>Target (PHP)<input name="target_amount" type="number" min="1" step="1" value="200000" required></label><label>Month<input name="month" type="month" value="'+h(dateLocal().slice(0,7))+'" required></label></div><button class="primary" type="submit">Create goal & department plan (no external actions)</button></form></section>';
  const needsPay=ceoState.audit.filter(x=>x.sync_state==='needs_payment_verification');const missing=ceoState.audit.filter(x=>x.sync_state==='missing_finance'&&x.ops_status==='done');const mismatches=ceoState.audit.filter(x=>x.quote_minus_collected!==null&&Math.abs(Number(x.quote_minus_collected))>0.01);
- out+='<section class="panel"><h3>Operations ↔ Finance · Live audit</h3><div class="ledger-kpis"><div class="ledger-kpi"><small>Completed, awaiting payment verification</small><strong>'+needsPay.length+'</strong></div><div class="ledger-kpi"><small>Completed jobs missing finance row</small><strong>'+missing.length+'</strong></div><div class="ledger-kpi"><small>Quotation vs collection differences</small><strong>'+mismatches.length+'</strong></div></div><p class="hint">Completed does not mean paid. Differences are flagged, not automatically overwritten. No automatic ledger modifications.</p>'+mismatches.slice(0,8).map(x=>'<p class="hint">'+h(x.job_no)+': quoted '+h(x.ops_quote)+' / collected '+money(x.finance_collected)+' (review)</p>').join('')+'</section>';
+ out+='<section class="panel"><h3>Operations ↔ Finance · Live audit</h3><div class="ledger-kpis"><div class="ledger-kpi"><small>Completed, awaiting payment verification</small><strong>'+needsPay.length+'</strong></div><div class="ledger-kpi"><small>Completed jobs missing finance row</small><strong>'+missing.length+'</strong></div><div class="ledger-kpi"><small>Quotation vs collection differences</small><strong>'+mismatches.length+'</strong></div></div><p class="hint">Completed does not mean paid. Differences are flagged, not automatically overwritten. No automatic ledger modifications.</p>'+mismatches.slice(0,8).map(x=>'<p class="hint">'+h(x.job_no)+': quoted '+h(x.ops_quote)+' / collected '+money(x.finance_collected)+' (review)</p>').join('')+'<h3>Owner payment reconciliation</h3><p class="hint">Confirm only after checking payment receipt. This updates Operations and finance together.</p>';
+ for(const x of needsPay.slice(0,35)){
+ out+='<form class="panel ceoPaymentForm" data-job-no="'+h(x.job_no)+'"><strong>'+h(x.job_no)+'</strong> · Ledger '+money(x.finance_collected)+' · Quotation '+h(x.ops_quote||"Unknown")+'<div class="flex"><label>Actual received PHP<input name="amount" type="number" step="0.01" min="0.01" value="'+h(x.finance_collected)+'" required></label><label>Receipt or payment evidence<input name="evidence" placeholder="Receipt number or GCash reference" minlength="5" required></label></div><button class="secondary" type="submit">Verify paid in both systems</button></form>';
+ }
+ out+='</section>';
  const goals=ceoState.goals;
  for(const g of goals){
  const m=String(g.month).slice(0,7);
@@ -223,6 +227,16 @@ function ceoPanel(){
  }
  return out;
 }
+document.addEventListener("submit",async e=>{
+ if(!e.target?.classList.contains("ceoPaymentForm"))return;
+ e.preventDefault();if(role()!=="owner")return toast("Owner only");
+ const job=e.target.dataset.jobNo,fd=new FormData(e.target),amount=Number(fd.get("amount")),evidence=String(fd.get("evidence")||"").trim();
+ if(!Number.isFinite(amount)||amount<=0||evidence.length<5)return toast("Enter actual payment and receipt evidence");
+ if(!confirm("Verify that "+job+" received "+money(amount)+"? This marks paid in Operations and verified in Finance."))return;
+ const {error}=await db.rpc("jmags_confirm_ops_payment",{p_job_no:job,p_amount:amount,p_evidence:evidence});
+ if(error)return toast("Payment NOT verified: "+error.message);
+ await load();await loadCeo();render();toast("Payment verified in both systems.");
+});
 document.addEventListener("submit",async e=>{
  if(e.target?.id!=="ceoGoalForm")return;e.preventDefault();if(ceoState.busy||role()!=="owner")return;
  const fd=new FormData(e.target),target=Number(fd.get("target_amount")),month=String(fd.get("month")),command=String(fd.get("command")||"").trim(),kind=String(fd.get("target_type"));
