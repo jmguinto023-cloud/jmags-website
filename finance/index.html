@@ -139,6 +139,7 @@
 .ceo-chat-stream .ceo-chat-message{animation:ceoChatReveal .5s ease-out both}@keyframes ceoChatReveal{0%{opacity:0;visibility:hidden;transform:translateY(10px)}100%{opacity:1;visibility:visible;transform:translateY(0)}}@media(prefers-reduced-motion:reduce){.ceo-chat-stream .ceo-chat-message{animation:none!important;opacity:1!important;visibility:visible!important}}
 .ceo-chat-typing{display:flex;align-items:center;gap:10px;animation:ceoTypingWindow 1.8s linear both;min-height:0}.ceo-typing-bubble{display:flex;align-items:center;gap:10px;border-radius:16px;padding:9px 13px;background:rgba(100,116,139,.14)}.ceo-typing-bubble small{font-size:11px;opacity:.7}.ceo-typing-dots{display:flex;gap:4px;align-items:center}.ceo-typing-dots i{width:6px;height:6px;background:currentColor;border-radius:50%;opacity:.45;animation:ceoDotBounce .9s infinite ease-in-out}.ceo-typing-dots i:nth-child(2){animation-delay:.15s}.ceo-typing-dots i:nth-child(3){animation-delay:.3s}@keyframes ceoDotBounce{0%,60%,100%{transform:translateY(0);opacity:.35}30%{transform:translateY(-4px);opacity:1}}@keyframes ceoTypingWindow{0%,85%{opacity:1;visibility:visible;max-height:65px;margin-bottom:0}100%{opacity:0;visibility:hidden;max-height:0;margin-bottom:-13px}}@media(prefers-reduced-motion:reduce){.ceo-chat-typing{display:none!important}.ceo-chat-stream .ceo-chat-message{animation:none!important}}
 .ceo-owner-chat{border:1px solid rgba(100,116,139,.4);border-radius:17px;overflow:hidden;margin:16px 0}.ceo-owner-chat-history{max-height:450px;overflow-y:auto;display:flex;flex-direction:column;gap:10px;padding:14px}.ceo-owner-chat-line{display:flex}.ceo-owner-chat-line.is-ceo{justify-content:flex-end}.ceo-owner-chat-bubble{max-width:88%;border-radius:15px;padding:11px 13px;background:rgba(100,116,139,.12)}.ceo-owner-chat-line.is-ceo .ceo-owner-chat-bubble{background:rgba(99,102,241,.18)}.ceo-owner-chat-bubble p{margin:7px 0;line-height:1.5;white-space:pre-wrap}.ceo-owner-chat-bubble small{font-size:11px;opacity:.7}.ceo-owner-chat-form{padding:14px;border-top:1px solid rgba(100,116,139,.25)}.ceo-owner-chat-form textarea{width:100%}
+.ceo-managers,.ceo-chat,.ceo-owner-chat{display:none!important}
 </style>
 </head><body>
 <header class="top"><div><div class="logo">JMAGS <span>COMMAND CENTER</span></div><div class="small">Appliances • San Pablo & Cavite • Finance Automation</div></div><div id="identity" class="small"></div></header>
@@ -208,24 +209,36 @@ body+='<div class="foot">Financial reports include verified jobs and expenses on
 }
 
 
-const ceoState={goals:[],actions:[],reasoning:[],audit:[],meetings:[],directChat:[],loaded:false,error:"",busy:false};
+const ceoState={goals:[],actions:[],reasoning:[],audit:[],meetings:[],directChat:[],managerRuns:[],loaded:false,error:"",busy:false};
 async function loadCeo(){
  if(role()!=="owner")return;
- const [g,a,r,audit,meetings,directChat]=await Promise.all([
+ const [g,a,r,audit,meetings,directChat,managerRuns]=await Promise.all([
  db.from("jmags_ceo_goals").select("*").order("created_at",{ascending:false}).limit(30),
  db.from("jmags_ceo_actions").select("*").order("created_at",{ascending:false}).limit(150),
  db.from("jmags_ceo_reasoning").select("*").order("created_at",{ascending:false}).limit(150),
  db.from("jmags_ops_finance_audit").select("job_no,ops_status,finance_status,sync_state,ops_quote,finance_collected,quote_minus_collected,ops_ad_source,finance_ad_campaign,completed_date,ops_payment_status").limit(1000),
  db.from("jmags_ceo_council_messages").select("*").order("created_at",{ascending:false}).limit(200),
- db.from("jmags_ceo_direct_chat").select("*").order("id",{ascending:false}).limit(100)
+ db.from("jmags_ceo_direct_chat").select("*").order("id",{ascending:false}).limit(100),
+ db.from("jmags_manager_work_log").select("*").order("id",{ascending:false}).limit(75)
  ]);
- ceoState.goals=g.data||[];ceoState.actions=a.data||[];ceoState.reasoning=r.data||[];ceoState.audit=audit.data||[];ceoState.meetings=meetings.data||[];ceoState.directChat=directChat.data||[];
- ceoState.error=g.error?.message||a.error?.message||r.error?.message||audit.error?.message||meetings.error?.message||directChat.error?.message||"";
+ ceoState.goals=g.data||[];ceoState.actions=a.data||[];ceoState.reasoning=r.data||[];ceoState.audit=audit.data||[];ceoState.meetings=meetings.data||[];ceoState.directChat=directChat.data||[];ceoState.managerRuns=managerRuns.data||[];
+ ceoState.error=g.error?.message||a.error?.message||r.error?.message||audit.error?.message||meetings.error?.message||directChat.error?.message||managerRuns.error?.message||"";
  ceoState.loaded=true;
+}
+function managerWorkPanel(){
+ const names=["General Manager","Finance Manager","Sales Manager","Operations Manager","Media Buyer"];
+ const cards=names.map(name=>{
+ const x=ceoState.managerRuns.find(v=>v.manager===name);
+ const hours=x?(Date.now()-new Date(x.finished_at).getTime())/3600000:Infinity;
+ const status=!x?"NO RUN":x.status!=="completed"?"FAILED":hours>2?"OVERDUE":"CHECK COMPLETE";
+ const when=x?new Date(x.finished_at).toLocaleString("en-PH"):"Never";
+ return '<article class="ceo-manager"><strong>'+h(name)+'</strong><p><b>'+h(status)+'</b> · '+h(when)+'</p><small>Mode: '+h(x?.execution_type||"none")+'</small><details><summary>Evidence and findings</summary><pre style="white-space:pre-wrap;overflow-wrap:anywhere;font-size:12px">'+h(JSON.stringify(x?.evidence||{}))+'\n'+h(JSON.stringify(x?.findings||{}))+'</pre></details></article>';
+ }).join("");
+ return '<section class="panel"><h2>AI Workforce · Verified Work Monitor</h2><p class="hint">Real hourly database checks, not autonomous generative AI. No payments, bookings or ads are changed.</p><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px">'+cards+'</div></section>';
 }
 function ceoPanel(){
  if(!ceoState.loaded&&!ceoState.busy){ceoState.busy=true;loadCeo().then(()=>{ceoState.busy=false;if(state.tab==="CEO Goals")render()}).catch(e=>{ceoState.error=e.message;ceoState.busy=false})}
- let out='<section class="panel"><h2>CEO Goal Engine · Cavite</h2><p class="hint">Create a CEO command; the system calculates a finance-backed plan using live ledger and advertising data. Department proposals are advisory, not automatic staff assignments or Meta writes.</p>';
+ let out=managerWorkPanel()+'<section class="panel"><h2>CEO Goal Engine · Cavite</h2><p class="hint">Create a CEO command; the system calculates a finance-backed plan using live ledger and advertising data. Department proposals are advisory, not automatic staff assignments or Meta writes.</p>';
  if(ceoState.error)out+=banner(h(ceoState.error),"bad");
  const hasLiveData=ceoState.loaded&&!ceoState.error;
  const financePending=ceoState.audit.filter(x=>x.sync_state==="needs_payment_verification").length;
