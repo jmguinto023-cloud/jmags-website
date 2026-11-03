@@ -357,7 +357,7 @@ document.addEventListener("submit",async e=>{
  const button=form.querySelector("button[type=submit]");if(button)button.disabled=true;
  try{
  const {data:aiResult,error}=await db.functions.invoke("jmags-ceo-gpt-chat",{body:{goal_id:Number(fd.get("goal_id")),department:String(fd.get("department")),message:msg}});
- if(error)throw error;
+ if(error){let detail=null;try{detail=await error.context?.json?.()}catch(_){}throw new Error(detail?.error?(detail.error+(detail.reason?" ("+detail.reason+")":"")):error.message)}
  if(!aiResult?.ok)throw new Error(aiResult?.error||"AI response unavailable");
  await loadCeo();render();toast("GPT manager response saved.");
  }catch(err){toast("Message failed: "+err.message);if(button)button.disabled=false}finally{ceoState.busy=false}
