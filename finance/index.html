@@ -323,9 +323,18 @@ function teamGoalPanel(){
  const council=(ceoState.teamCouncil||[]).filter(x=>x.goal_id===g.id);
  let out='<section class="panel"><h2>AI Management Team · Balanced Growth</h2><p><strong>'+h(g.objective)+'</strong></p><p class="hint">Business goal: both branches. Current AI Council evidence: Cavite only. Independent recommendations; consequential actions require CEO approval.</p>';
  out+='<p><button id="run-growth-council" type="button">Run five-manager AI council</button> <small class="hint">Generates five evidence-based proposals. No business changes are executed. A recent run cannot be repeated for 3 hours.</small></p>';
- out+='<div class="ledger-kpis"><div class="ledger-kpi"><small>Decision proposals</small><strong>'+decisions.length+'</strong></div><div class="ledger-kpi"><small>Council responses</small><strong>'+council.length+'</strong></div><div class="ledger-kpi"><small>Approved</small><strong>'+decisions.filter(x=>x.status==="approved").length+'</strong></div><div class="ledger-kpi"><small>Executed</small><strong>'+decisions.filter(x=>x.status==="executed"||x.status==="measured").length+'</strong></div></div>';
+ out+='<div class="ledger-kpis"><div class="ledger-kpi"><small>Decision proposals</small><strong>'+decisions.length+'</strong></div><div class="ledger-kpi"><small>Council notes</small><strong>'+council.length+'</strong></div><div class="ledger-kpi"><small>Approved</small><strong>'+decisions.filter(x=>x.status==="approved").length+'</strong></div><div class="ledger-kpi"><small>Executed</small><strong>'+decisions.filter(x=>x.status==="executed"||x.status==="measured").length+'</strong></div></div>';
  if(!decisions.length)out+='<p class="hint">No goal-specific team decisions recorded yet. AI manager reports are not the same as approved or executed decisions.</p>';
- for(const d of decisions.slice(0,8)){out+='<details class="ledger-review"><summary><strong>'+h(d.manager)+'</strong> · '+h(d.status)+' · '+h(d.proposal)+'</summary><p><strong>Reason:</strong> '+h(d.rationale)+'</p><p><strong>Approval:</strong> '+(d.requires_ceo_approval?'CEO required':'Policy controlled')+'</p><pre style="white-space:pre-wrap;overflow-wrap:anywhere">'+h(JSON.stringify(d.evidence||{},null,2))+'</pre></details>';}
+ for(const d of decisions.slice(0,10)){
+ const responses=council.filter(x=>x.decision_id===d.id);
+ const metric=d.metrics?.target_metric||"No target defined";
+ out+='<details class="ledger-review"><summary><strong>'+h(d.manager)+'</strong> · '+h(d.status)+' · '+h(d.proposal)+'</summary>';
+ out+='<p><strong>Decision rationale:</strong> '+h(d.rationale)+'</p><p><strong>Measure:</strong> '+h(String(metric))+'</p>';
+ out+='<p><strong>Approval:</strong> '+(d.requires_ceo_approval?'CEO approval required — no action executed':'Review policy before execution')+'</p>';
+ out+='<p><strong>Evidence limitations:</strong> '+h(String(d.evidence?.missing_evidence||"None stated"))+'</p>';
+ for(const m of responses)out+='<p><strong>'+h(m.manager)+' · '+h(m.stance)+':</strong> '+h(m.reasoning)+'</p>';
+ out+='<details><summary>Source evidence</summary><pre style="white-space:pre-wrap;overflow-wrap:anywhere">'+h(JSON.stringify(d.evidence||{},null,2))+'</pre></details></details>';
+}
  return out+'</section>';
 }
 function managerWorkPanel(){
