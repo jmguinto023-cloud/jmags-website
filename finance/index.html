@@ -135,6 +135,7 @@
 .ceo-manager.sales .ceo-manager-icon{background:rgba(234,179,8,.13)}.ceo-manager.operations .ceo-manager-icon{background:rgba(6,182,212,.13)}.ceo-manager.media .ceo-manager-icon{background:rgba(249,115,22,.13)}
 .ceo-manager.sales .ceo-meter i{background:#eab308}.ceo-manager.operations .ceo-meter i{background:#06b6d4}.ceo-manager.media .ceo-meter i{background:#f97316}
 .ceo-council{display:grid;gap:12px;margin-top:14px}.ceo-council-turn{border:1px solid var(--line,#cbd5e1);border-radius:12px;padding:13px;border-left:4px solid #64748b}.ceo-council-turn:nth-child(1){border-left-color:#eab308}.ceo-council-turn:nth-child(2){border-left-color:#06b6d4}.ceo-council-turn:nth-child(3){border-left-color:#16a34a}.ceo-council-turn:nth-child(4){border-left-color:#f97316}.ceo-council-turn:nth-child(5){border-left-color:#6366f1}.ceo-council-turn small{display:block;opacity:.75;margin-top:5px}.ceo-council-turn p{margin:9px 0;line-height:1.5}.ceo-council-verdict{border:1px solid #64748b;border-radius:12px;padding:14px;background:rgba(100,116,139,.08)}
+.ceo-chat{border:1px solid #64748b;border-radius:17px;overflow:hidden;margin:16px 0;background:rgba(100,116,139,.05)}.ceo-chat-header{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:14px;background:rgba(100,116,139,.13)}.ceo-chat-header small{display:block;margin-top:4px;opacity:.7}.ceo-chat-connection{display:flex;align-items:center;gap:8px;font-size:12px;white-space:nowrap}.ceo-chat-stream{max-height:480px;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:13px}.ceo-chat-message{display:flex;gap:10px;align-items:flex-start}.ceo-chat-avatar{border-radius:50%;padding:9px;background:rgba(100,116,139,.14);font-size:21px}.ceo-chat-bubble{max-width:90%;border:1px solid rgba(100,116,139,.32);border-radius:4px 14px 14px 14px;padding:11px 13px;background:rgba(100,116,139,.08)}.ceo-chat-meta{display:flex;gap:12px;flex-wrap:wrap;align-items:center}.ceo-chat-meta span{font-size:11px;opacity:.7}.ceo-chat-bubble p{margin:8px 0;line-height:1.5}.ceo-chat-bubble small{font-size:11px;opacity:.75}.ceo-chat-message.general_manager{justify-content:flex-end}.ceo-chat-message.general_manager .ceo-chat-avatar{order:2}.ceo-chat-message.general_manager .ceo-chat-bubble{background:rgba(99,102,241,.12);border-radius:14px 4px 14px 14px}.ceo-chat-message.finance .ceo-chat-bubble{border-left:3px solid #16a34a}.ceo-chat-message.sales .ceo-chat-bubble{border-left:3px solid #eab308}.ceo-chat-message.operations .ceo-chat-bubble{border-left:3px solid #06b6d4}.ceo-chat-message.media_buyer .ceo-chat-bubble{border-left:3px solid #f97316}.ceo-chat-empty{padding:32px 18px;text-align:center;opacity:.75}.ceo-chat-footer{display:flex;gap:12px;justify-content:space-between;align-items:center;padding:12px 14px;border-top:1px solid rgba(100,116,139,.2);font-size:12px}.ceo-chat-footer button{white-space:nowrap}
 </style>
 </head><body>
 <header class="top"><div><div class="logo">JMAGS <span>COMMAND CENTER</span></div><div class="small">Appliances • San Pablo & Cavite • Finance Automation</div></div><div id="identity" class="small"></div></header>
@@ -249,10 +250,16 @@ function ceoPanel(){
  out+='<section class="panel"><h3>Management Council · Goal #'+h(activeGoal.id)+'</h3><p class="hint">Five departmental positions are compared below. This is a rule-based synthesis of recorded proposals, not a live LLM conversation or autonomous meeting. Every decision requires owner review.</p><p><strong>CEO command:</strong> '+h(activeGoal.command)+'</p>';
  const latest=ceoState.meetings.find(x=>Number(x.goal_id)===Number(activeGoal.id));
  out+='<div class="flex"><button type="button" class="primary" data-run-ceo-council="'+h(activeGoal.id)+'">Run recorded management meeting</button><span class="hint">Owner only · evidence-based review · no external actions</span></div>';
+ const meetingCount=new Set(ceoState.meetings.filter(x=>Number(x.goal_id)===Number(activeGoal.id)).map(x=>x.meeting_id)).size;
+ out+='<div class="ceo-chat" role="region" aria-label="AI management meeting chat"><div class="ceo-chat-header"><div><strong>Management Team Chat</strong><small>Saved messages · refreshes while open · '+meetingCount+' recorded meetings</small></div><span class="ceo-chat-connection"><span class="ceo-live-dot"></span> Live feed</span></div>';
  if(latest){
  const turns=ceoState.meetings.filter(x=>x.meeting_id===latest.meeting_id).sort((a,b)=>a.turn_no-b.turn_no);
- out+='<div class="ceo-council"><h4>Recorded meeting · '+h(new Date(latest.created_at).toLocaleString("en-PH"))+'</h4>'+turns.map(x=>'<div class="ceo-council-turn"><strong>'+h(names[x.department]||x.department)+'</strong><small>'+h(x.message_type)+'</small><p>'+h(x.message)+'</p></div>').join('')+'</div>';
+ const chatIcons={general_manager:"🧠",finance:"💹",sales:"📈",operations:"🛠️",media_buyer:"📣"};
+ out+='<div class="ceo-chat-stream" id="ceoChatStream" aria-live="polite">'+turns.map(x=>'<div class="ceo-chat-message '+h(x.department)+'"><div class="ceo-chat-avatar">'+(chatIcons[x.department]||"💬")+'</div><div class="ceo-chat-bubble"><div class="ceo-chat-meta"><strong>'+h(names[x.department]||x.department)+'</strong><span>'+h(x.message_type)+' · '+h(new Date(x.created_at).toLocaleTimeString("en-PH",{hour:"2-digit",minute:"2-digit"}))+'</span></div><p>'+h(x.message)+'</p>'+(x.message_type==="decision"?'<small>Proposal for CEO review · not executed</small>':'')+'</div></div>').join('')+'</div>';
+ }else{
+ out+='<div class="ceo-chat-empty">No meeting messages yet. Run a recorded management meeting to generate an evidence-based discussion.</div>';
  }
+ out+='<div class="ceo-chat-footer"><span>Read-only meeting transcript. Messages are generated when a meeting runs, not continuously.</span><button type="button" data-refresh-ceo-chat="yes">Refresh chat</button></div></div>';
  out+='<div class="ceo-council">';
  for(const dept of sequence){
  const item=councilActions.find(x=>x.department===dept);
@@ -328,6 +335,10 @@ document.addEventListener("submit",async e=>{
  for(const [dept,title,reason] of proposals){const rr=await db.rpc("jmags_ceo_propose_action",{p_goal_id:id,p_department:dept,p_title:title,p_rationale:reason,p_evidence:{verified_revenue:revenue,ad_spend:spend,verified_jobs:monthJobs.length,attributed_jobs:attributed,submitted_jobs:unverified,ops_done:opsDone.length,payment_verification_pending:unpaid,quote_discrepancies:discrepancy,ops_named_ad_sources:matchable,confidence:monthJobs.length>5?"limited":"low",month}});if(rr.error)throw rr.error;}
  await loadCeo();toast("CEO goal and five department plans saved. No Meta writes.");render();
  }catch(err){toast("Goal setup issue: "+err.message);await loadCeo();render()}finally{ceoState.busy=false}
+});
+document.addEventListener("click",async e=>{
+ const b=e.target.closest("button[data-refresh-ceo-chat]");if(!b)return;
+ await loadCeo();render();toast("Management chat refreshed.");
 });
 document.addEventListener("click",async e=>{
  const b=e.target.closest("button[data-run-ceo-council]");if(!b)return;
@@ -701,9 +712,11 @@ const opsRealtime=db.channel("jmags-finance-live")
  .on("postgres_changes",{event:"*",schema:"public",table:"jmags_finance_jobs"},refreshOpsFinanceSoon)
  .on("postgres_changes",{event:"*",schema:"public",table:"jmags_finance_expenses"},refreshOpsFinanceSoon)
  .on("postgres_changes",{event:"*",schema:"public",table:"app_docs",filter:"collection=eq.jobs"},refreshOpsFinanceSoon)
+ .on("postgres_changes",{event:"INSERT",schema:"public",table:"jmags_ceo_council_messages"},()=>{if(state.tab==="CEO Goals")loadCeo().then(render).catch(()=>{})})
  .subscribe();
 window.addEventListener("focus",refreshOpsFinanceSoon);
 document.addEventListener("visibilitychange",()=>{if(!document.hidden)refreshOpsFinanceSoon()});
+setInterval(()=>{if(state.user&&role()==="owner"&&state.tab==="CEO Goals"&&!ceoState.busy&&!(document.activeElement&&document.activeElement.closest&&document.activeElement.closest("form")))loadCeo().then(render).catch(()=>{})},15000);
 setInterval(()=>{if(state.user&&!recoveryMode&&["owner","staff","tech"].includes(role())&&!(document.activeElement&&document.activeElement.closest&&document.activeElement.closest("form")))load().catch(showStartupError)},60000);
 })();
 </script>
