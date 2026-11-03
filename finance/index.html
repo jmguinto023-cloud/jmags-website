@@ -178,16 +178,17 @@ body+='<div class="foot">Financial reports include verified jobs and expenses on
 }
 
 
-const ceoState={goals:[],actions:[],reasoning:[],loaded:false,error:"",busy:false};
+const ceoState={goals:[],actions:[],reasoning:[],audit:[],loaded:false,error:"",busy:false};
 async function loadCeo(){
  if(role()!=="owner")return;
- const [g,a,r]=await Promise.all([
+ const [g,a,r,audit]=await Promise.all([
  db.from("jmags_ceo_goals").select("*").order("created_at",{ascending:false}).limit(30),
  db.from("jmags_ceo_actions").select("*").order("created_at",{ascending:false}).limit(150),
- db.from("jmags_ceo_reasoning").select("*").order("created_at",{ascending:false}).limit(150)
+ db.from("jmags_ceo_reasoning").select("*").order("created_at",{ascending:false}).limit(150),
+ db.from("jmags_ops_finance_audit").select("job_no,ops_status,finance_status,sync_state,ops_quote,finance_collected,quote_minus_collected,ops_ad_source,finance_ad_campaign,completed_date").limit(1000)
  ]);
- ceoState.goals=g.data||[];ceoState.actions=a.data||[];ceoState.reasoning=r.data||[];
- ceoState.error=g.error?.message||a.error?.message||r.error?.message||"";
+ ceoState.goals=g.data||[];ceoState.actions=a.data||[];ceoState.reasoning=r.data||[];ceoState.audit=audit.data||[];
+ ceoState.error=g.error?.message||a.error?.message||r.error?.message||audit.error?.message||"";
  ceoState.loaded=true;
 }
 function ceoPanel(){
@@ -195,7 +196,7 @@ function ceoPanel(){
  let out='<section class="panel"><h2>CEO Goal Engine · Cavite</h2><p class="hint">Create a CEO command; the system calculates a finance-backed plan using live ledger and advertising data. Department proposals are advisory, not automatic staff assignments or Meta writes.</p>';
  if(ceoState.error)out+=banner(h(ceoState.error),"bad");
  out+='<form id="ceoGoalForm"><label>Owner command<textarea name="command" required minlength="12" placeholder="Increase Cavite sales by ₱200,000 this month"></textarea></label><div class="flex"><label>Goal type<select name="target_type"><option value="additional_revenue">Additional revenue above current run-rate</option><option value="total_revenue">Total revenue target</option></select></label><label>Target (PHP)<input name="target_amount" type="number" min="1" step="1" value="200000" required></label><label>Month<input name="month" type="month" value="'+h(dateLocal().slice(0,7))+'" required></label></div><button class="primary" type="submit">Create goal & department plan (no external actions)</button></form></section>';
- const goals=ceoState.goals;
+ const needsPay=ceoState.audit.filter(x=>x.sync_state==='needs_payment_verification');const missing=ceoState.audit.filter(x=>x.sync_state==='missing_finance');const mismatches=ceoState.audit.filter(x=>x.quote_minus_collected!==null&&Math.abs(Number(x.quote_minus_collected))>0.01);\n out+='<section class="panel"><h3>Operations ↔ Finance · Live audit</h3><div class="ledger-kpis"><div class="ledger-kpi"><small>Completed, awaiting payment verification</small><strong>'+needsPay.length+'</strong></div><div class="ledger-kpi"><small>Ops jobs missing finance row</small><strong>'+missing.length+'</strong></div><div class="ledger-kpi"><small>Quotation vs collection differences</small><strong>'+mismatches.length+'</strong></div></div><p class="hint">Completed does not mean paid. Differences are flagged, not automatically overwritten. No automatic ledger modifications.</p>'+mismatches.slice(0,8).map(x=>'<p class="hint">'+h(x.job_no)+': quoted '+h(x.ops_quote)+' / collected '+money(x.finance_collected)+' (review)</p>').join('')+'</section>';\n const goals=ceoState.goals;
  for(const g of goals){
  const m=String(g.month).slice(0,7);
  const jobs=state.jobs.filter(x=>x.branch==="cavite"&&String(x.job_date||"").slice(0,7)===m&&x.status==="verified");
@@ -208,10 +209,10 @@ function ceoPanel(){
  const baseline=Number(g.baseline_revenue||0),target=Number(g.target_amount);
  const goalTotal=g.target_type==="additional_revenue"?baseline+target:target;
  const gap=Math.max(0,goalTotal-revenue),remaining=Math.max(0,totalDays-elapsed);
- const avg=jobs.length?revenue/jobs.length:null;
+ const avg=jobs.length?revenue/jobs.length:null;const forecast=elapsed>0?revenue/elapsed*totalDays:0;const shortfall=Math.max(0,goalTotal-forecast);
  const actions=ceoState.actions.filter(x=>x.goal_id===g.id),notes=ceoState.reasoning.filter(x=>x.goal_id===g.id);
  out+='<section class="panel"><h2>'+h(m)+' · '+h(g.command)+'</h2><p class="hint">Goal: '+money(goalTotal)+' · '+h(g.target_type)+' · '+h(g.status)+'</p><div class="ledger-kpis"><div class="ledger-kpi"><small>Verified revenue</small><strong>'+money(revenue)+'</strong></div><div class="ledger-kpi"><small>Revenue gap</small><strong>'+money(gap)+'</strong></div><div class="ledger-kpi"><small>Required daily revenue</small><strong>'+(remaining?money(gap/remaining):"Deadline passed")+'</strong></div><div class="ledger-kpi"><small>Verified repairs</small><strong>'+jobs.length+'</strong></div><div class="ledger-kpi"><small>Submitted (not final)</small><strong>'+submitted.length+'</strong></div><div class="ledger-kpi"><small>Ad spend recorded</small><strong>'+money(spend)+'</strong></div></div>';
- out+='<p class="hint">Contribution from verified jobs: '+money(contribution)+'. Campaign-attributed verified jobs: '+attributed+'. '+(avg?'Average verified repair: '+money(avg)+'. Estimated additional jobs needed: '+Math.ceil(gap/avg)+'.':'No verified average repair value yet; job count forecast unavailable.')+' Recorded ad spend is not proof of ad-attributed profit. Forecast excludes unverified submissions.</p>';
+ out+='<p class="hint"><strong>Month-end run-rate forecast: '+money(forecast)+'</strong> · Projected target shortfall: '+money(shortfall)+'. Forecast is based on verified revenue only; with no verified jobs it is a low-confidence estimate, not a prediction of zero actual sales.</p>';\n out+='<p class="hint">Contribution from verified jobs: '+money(contribution)+'. Campaign-attributed verified jobs: '+attributed+'. '+(avg?'Average verified repair: '+money(avg)+'. Estimated additional jobs needed: '+Math.ceil(gap/avg)+'.':'No verified average repair value yet; job count forecast unavailable.')+' Recorded ad spend is not proof of ad-attributed profit. Forecast excludes unverified submissions.</p>';
  out+='<h3>Department decisions · Owner approval</h3>';
  for(const a of actions){out+='<div class="panel"><strong>'+h(a.department.replaceAll("_"," "))+' · '+h(a.action_title)+'</strong> '+status(a.status)+'<p>'+h(a.rationale)+'</p><p class="hint">Risk: '+h(a.risk)+'</p>'+(a.status==="proposed"?'<button class="secondary" data-ceo-review="'+a.id+'" data-ceo-approve="yes">Approve plan</button> <button class="secondary" data-ceo-review="'+a.id+'" data-ceo-approve="no">Reject</button>':'')+'</div>'}
  out+='<h3>Reasoning & audit history</h3>'+notes.slice(0,15).map(x=>'<p class="hint">'+h(new Date(x.created_at).toLocaleString("en-PH"))+' · '+h(x.department)+': '+h(x.statement)+'</p>').join("");
@@ -601,11 +602,11 @@ function refreshOpsFinanceSoon(){
  if(!state.user||recoveryMode||state.working)return;
  if(document.activeElement&&document.activeElement.closest&&document.activeElement.closest("form"))return;
  if(opsRefreshTimer)clearTimeout(opsRefreshTimer);
- opsRefreshTimer=setTimeout(()=>{opsRefreshTimer=null;load().catch(()=>{});if(state.tab==="Ads")loadMediaBuyer().then(render).catch(()=>{});},700);
+ opsRefreshTimer=setTimeout(()=>{opsRefreshTimer=null;load().catch(()=>{});if(state.tab==="Ads")loadMediaBuyer().then(render).catch(()=>{});if(state.tab==="CEO Goals")loadCeo().then(render).catch(()=>{});},700);
 }
 const opsRealtime=db.channel("jmags-finance-live")
  .on("postgres_changes",{event:"*",schema:"public",table:"jmags_finance_jobs"},refreshOpsFinanceSoon)
- .on("postgres_changes",{event:"*",schema:"public",table:"jmags_finance_expenses"},refreshOpsFinanceSoon)
+ .on("postgres_changes",{event:"*",schema:"public",table:"jmags_finance_expenses"},refreshOpsFinanceSoon)\n .on("postgres_changes",{event:"*",schema:"public",table:"app_docs",filter:"collection=eq.jobs"},refreshOpsFinanceSoon)
  .subscribe();
 window.addEventListener("focus",refreshOpsFinanceSoon);
 document.addEventListener("visibilitychange",()=>{if(!document.hidden)refreshOpsFinanceSoon()});
