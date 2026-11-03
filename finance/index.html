@@ -783,6 +783,10 @@ function liveMediaBuyerPanel(){
  const d=liveMediaBuyer.data;
  let out='<section class="panel"><div class="sectiontitle"><h2>AI Media Buyer · Cavite</h2><button class="secondary" id="mediaLiveRefresh">↻ Refresh</button></div><p class="hint">Live Supabase campaign monitoring. Messaging conversations are not verified customer bookings. Automatic Meta actions remain locked until safety preflight passes.</p>';
  if(liveMediaBuyer.error)out+=banner(h(liveMediaBuyer.error),"bad");
+ if(liveMediaBuyer.loadedAt){
+  const age=Math.round((Date.now()-liveMediaBuyer.loadedAt)/1000),stale=age>90;
+  out+='<p class="hint" style="font-weight:700;color:'+(stale?'#b45309':'#047857')+'">'+(stale?'⚠ Data may be stale':'● API data fetched')+' · '+new Date(liveMediaBuyer.loadedAt).toLocaleString("en-PH",{timeZone:"Asia/Manila"})+' PHT · '+age+' seconds ago</p>';
+ }
  if(!d)return out+'<p class="hint">'+(liveMediaBuyer.loading?"Loading live campaign data…":"Waiting for live reporting.")+'</p></section>';
  const policy=d.policy||{},pre=d.preflight||{},a=d.attribution||{},review=d.review_queue||{};
  out+='<div class="banner '+(policy.meta_writes_enabled&&pre.ready?"good":"warn")+'"><strong>Meta execution: '+(policy.meta_writes_enabled&&pre.ready?"Eligible for approved actions":"SAFETY LOCKED")+'</strong> · '+h((pre.reasons||[]).join(", ")||"No preflight blockers")+'</div>';
