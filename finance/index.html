@@ -439,7 +439,7 @@ async function loadMediaBuyer(){
 }
 function mediaBuyerPanel(){
  if(role()!=="owner")return "";
- let out='<section class="panel" id="media-buyer"><h2>ChatGPT AI Media Buyer · Owner Approval</h2><p class="hint">Decisions are proposals only. Approval is recorded in JMAGS, but never executes a Meta Ads change. Review campaign results and actual paid-job contribution before approving. Winning ads and their social proof remain protected.</p>';
+ let out='<section class="panel" id="media-buyer"><h2>JMAGS AI Media Buyer · Decisions & Activity</h2><p class="hint">Decisions are proposals only. Approval is recorded in JMAGS, but never executes a Meta Ads change. Review campaign results and actual paid-job contribution before approving. Winning ads and their social proof remain protected.</p>';
  if(mediaBuyer.error)out+=banner(h(mediaBuyer.error),"bad");
  out+='<div class="banner warn"><strong>Execution lock:</strong> No Meta write integration is enabled in this dashboard. A proposal approved here is NOT an executed campaign change. Do not treat approval as proof of delivery.</div>';
  out+='<details><summary><strong>Create a media-buyer decision proposal</strong></summary><form id="mediaBuyerForm"><div class="row"><div><label>Branch<select name="branch"><option value="cavite">Cavite</option><option value="san_pablo">San Pablo</option></select></label><label>Campaign name<input name="campaign" required minlength="3" maxlength="200"></label><label>Meta campaign ID<input name="campaign_id" required maxlength="80"></label></div><div><label>Recommendation<select name="proposed_action"><option value="keep">Keep unchanged</option><option value="test">Test separately</option><option value="scale">Scale budget</option><option value="reduce">Reduce budget</option><option value="pause">Pause</option><option value="creative_change">Change creative</option><option value="restart">Restart</option><option value="duplicate">Duplicate</option></select></label><label>Evidence period<input name="evidence_window" placeholder="Last 7 completed days" required maxlength="100"></label><label>Risk / learning-phase notes<textarea name="risk_notes" rows="2" required maxlength="1500"></textarea></label></div></div><label>Evidence and reasoning<textarea name="rationale" rows="3" required minlength="12" maxlength="3000" placeholder="Performance, message quality, paid jobs, and why this action is justified"></textarea></label><button class="primary" type="submit">Save proposal for owner review</button></form></details>';
@@ -488,7 +488,7 @@ document.addEventListener("click",async e=>{
  catch(err){toast("Review failed: "+String(err.message||err));}
  finally{mediaBuyer.busy=false;}
 });
-function ads(){if(role()==="owner"&&!mediaBuyer.loaded&&!mediaBuyer.busy)loadMediaBuyer().then(()=>{if(state.tab==="Ads")render()});return mediaBuyerPanel()+adHealthPanel();}
+function ads(){if(role()==="owner"&&!mediaBuyer.loaded&&!mediaBuyer.busy)loadMediaBuyer().then(()=>{if(state.tab==="Ads")render()});return mediaBuyerPanel();}
 function ledger(){
  const rows=state.jobs.filter(x=>(state.branch==="all"||x.branch===state.branch)&&fMonth(x.job_date)&&(state.ledgerStatusFilter==="void"?x.status==="void":state.ledgerStatusFilter==="all"?["submitted","verified"].includes(x.status):x.status===state.ledgerStatusFilter)).sort((a,b)=>String(b.job_date).localeCompare(String(a.job_date)));
  const valid=rows.filter(x=>x.status==="submitted"||x.status==="verified");
