@@ -353,6 +353,7 @@ function adHealthPanel(){
  const today=manilaToday();
  const localHour=Number(new Intl.DateTimeFormat("en-GB",{timeZone:"Asia/Manila",hour:"2-digit",hourCycle:"h23"}).format(new Date()));
  let out='<section class="panel" id="ad-health-panel"><div class="ad-health-head"><div><h2>Cavite Ad Health</h2><p class="hint">Messaging-efficiency monitoring from the separate Cavite Meta Ads guardrail system. Status colors come from its own checks, not from the dashboard. Today: '+h(today)+' (Manila). This panel is read-only.</p></div><button class="secondary" type="button" id="refreshAdHealth"'+(state.adHealthLoading?" disabled":"")+'>'+(state.adHealthLoading?"Refreshing…":"↻ Refresh checks")+'</button></div>';
+ out+='<div class="panel" style="margin:12px 0;border:1px solid #b9d8f6;background:#f6faff"><h3>ChatGPT Ads Control — Learning Phase Protection</h3><p class="hint">Owner policy saved. This is a read-only policy and monitoring panel; separate Meta-writing automations must be audited before enforcement can be confirmed.</p><div class="cols3"><div><strong>AI monitoring</strong><p class="green">Allowed (read-only)</p></div><div><strong>Protect winning ads</strong><p class="green">Policy saved</p></div><div><strong>Automatic duplication / restart</strong><p class="red">Prohibited; enforcement unverified</p></div><div><strong>Creative replacement</strong><p>Owner approval required</p></div><div><strong>Pause or budget changes</strong><p>Owner approval required</p></div><div><strong>New creative tests</strong><p>Separate tests with approval</p></div></div><p class="hint">No Meta campaign changes can be made from this panel. Existing records remain intact.</p></div>';
  if(state.adHealthError)out+=banner("Unable to load the ad monitoring log: "+h(state.adHealthError),"bad");
  if(!state.adHealthLoaded&&!state.adHealthError)out+='<p class="hint">Loading Cavite monitoring checks…</p>';
  const latest=new Map();
@@ -393,7 +394,7 @@ function adHealthPanel(){
  }
  if(state.adHealthStrategyError)out+='<p class="hint">Optional creative history is unavailable: '+h(state.adHealthStrategyError)+'</p>';
  if(state.adHealthFetchedAt)out+='<p class="ad-health-freshness">Data refreshed '+h(adTime(state.adHealthFetchedAt))+' Philippine time. Dashboard updates approximately every minute while open.</p>';
- out+='<p class="hint"><strong>Action meanings:</strong> Steady = no change. Paused + replaced = a capped-budget duplicate using the same creative/post. Scaled up = reported 5% budget increase (maximum weekly). A creative refresh is a separate action. Always verify actual account changes in Meta Ads Manager.</p></section>';
+ out+='<p class="hint"><strong>Action meanings:</strong> Steady = no change. Historical labels describe earlier monitoring reports, not current permitted actions. Automatic duplication, pausing, restarts, creative replacements, and budget changes require explicit owner approval. Always verify actual account changes in Meta Ads Manager.</p></section>';
  return out;
 }
 async function loadAdHealth(){
