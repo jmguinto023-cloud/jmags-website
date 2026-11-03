@@ -705,7 +705,7 @@ document.addEventListener("click",async e=>{
 });
 function ads(){if(role()==="owner"&&!mediaBuyer.loaded&&!mediaBuyer.busy)loadMediaBuyer().then(()=>{if(state.tab==="Ads")render()});return mediaBuyerPanel();}
 
-const liveMediaBuyer={data:null,loading:false,error:"",loadedAt:0};
+const liveMediaBuyer={data:null,review:[],loading:false,error:"",loadedAt:0};
 async function fetchLiveMediaBuyer(){
  if(liveMediaBuyer.loading||!state.user||role()!=="owner")return;
  liveMediaBuyer.loading=true;liveMediaBuyer.error="";
@@ -715,7 +715,7 @@ async function fetchLiveMediaBuyer(){
   const res=await fetch(URL_DB+"/functions/v1/jmags-media-command-center",{method:"GET",headers:{"authorization":"Bearer "+session.access_token,"apikey":PUBLIC_KEY},cache:"no-store"});
   const payload=await res.json();
   if(!res.ok||!payload.ok)throw Error(payload.error||"Media Buyer API unavailable");
-  liveMediaBuyer.data=payload.media_buyer;liveMediaBuyer.loadedAt=Date.now();
+  liveMediaBuyer.data=payload.media_buyer;liveMediaBuyer.review=payload.attribution_review||[];liveMediaBuyer.loadedAt=Date.now();
  }catch(e){liveMediaBuyer.error=String(e?.message||e)}
  finally{liveMediaBuyer.loading=false;if(state.tab==="AI Media Buyer")render();}
 }
@@ -730,7 +730,7 @@ function liveMediaBuyerPanel(){
  out+='<div class="ledger-kpis"><div class="ledger-kpi"><small>Verified attributed jobs</small><strong>'+Number(pre.verified_attributed_jobs||0)+'</strong></div><div class="ledger-kpi"><small>Unverified jobs</small><strong>'+Number(a.unverified||0)+'</strong></div><div class="ledger-kpi"><small>Payments to verify</small><strong>'+Number(review.verify_payment||0)+'</strong></div><div class="ledger-kpi"><small>Actions in 24h</small><strong>'+Number(pre.actions_last_24h||0)+'</strong></div></div>';
  out+='<h3>Meta campaign performance · recent 7 days</h3><div style="overflow-x:auto"><table><thead><tr><th>Campaign</th><th>Spend</th><th>Messages</th><th>Cost/message</th><th>Last sync</th></tr></thead><tbody>';
  for(const x of d.campaigns||[])out+='<tr><td>'+h(x.campaign)+'</td><td>'+money(Number(x.spend_php||0))+'</td><td>'+Number(x.messages||0)+'</td><td>'+(x.cost_per_message_php==null?"—":money(Number(x.cost_per_message_php)))+'</td><td>'+h(x.last_sync?new Date(x.last_sync).toLocaleString("en-PH",{timeZone:"Asia/Manila"}):"—")+'</td></tr>';
- out+='</tbody></table></div><p class="hint">Verification queue: '+Number(review.verify_payment||0)+' payments to verify; '+Number(review.check_payment||0)+' payment checks; '+Number(review.review_job||0)+' other job reviews. Campaign ROI remains unverified until actual paid jobs have reliable campaign IDs.</p></section>';
+ out+='</tbody></table></div><h3>Attribution review queue</h3><p class="hint">Read-only. Verify actual payment and exact campaign ID in JMAGS Operations before marking attribution as confirmed.</p><div style="overflow-x:auto"><table><thead><tr><th>Job</th><th>Payment</th><th>Ad source</th><th>Next action</th></tr></thead><tbody>';for(const j of liveMediaBuyer.review||[])out+='<tr><td>'+h(j.job_no||"—")+'</td><td>'+h(j.finance_status||j.ops_payment_status||"unverified")+'</td><td>'+h(j.recorded_campaign||j.reported_ad_source||"unknown")+'</td><td>'+h(j.next_action||"review")+'</td></tr>';out+='</tbody></table></div><p class="hint">Verification queue: '+Number(review.verify_payment||0)+' payments to verify; '+Number(review.check_payment||0)+' payment checks; '+Number(review.review_job||0)+' other job reviews. Campaign ROI remains unverified until actual paid jobs have reliable campaign IDs.</p></section>';
  return out;
 }
 function ledger(){
