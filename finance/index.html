@@ -163,7 +163,7 @@ for(const r of results){state[r.name]=r.data||[];if(r.error)errors.push(r.name+"
 render(errors);
 if(state.tab==="Ads")await loadAdHealth();
 }
-function shell(){const menus=admin()?["Overview","Jobs","Expenses","Ads","Ledger",...(role()==="owner"?["Claude AI"]:[])]:["Jobs"];
+function shell(){const menus=admin()?["Overview","Jobs","Expenses","Ads","Ledger",...(role()==="owner"?["Claude AI","CEO Goals"]:[])]:["Jobs"];
 return '<div class="flex"><div><h1>Finance & Operations</h1><div class="hint">One technician entry → one ledger record → verified monthly reporting.</div></div><div class="flex"><input class="filter" type="month" id="month" value="'+h(state.month)+'"><select class="filter" id="branch"><option value="all">Both branches</option><option value="san_pablo"'+(state.branch==="san_pablo"?" selected":"")+'>San Pablo</option><option value="cavite"'+(state.branch==="cavite"?" selected":"")+'>Cavite</option></select><button class="secondary" id="refresh">↻ Refresh</button></div></div><div class="panel"><nav class="nav">'+menus.map(x=>'<button data-tab="'+x+'" class="'+(state.tab===x?"active":"")+'">'+x+'</button>').join("")+'</nav></div>'}
 function render(errors){if(!state.user)return login();if(!admin()&&role()!=="tech")return check();if(!admin()&&state.tab!=="Jobs")state.tab="Jobs";let body=shell();
 if(errors?.length)body+=banner("Some records could not be read: "+h(errors.join("; ")),"bad");
@@ -173,10 +173,86 @@ if(state.tab==="Expenses")body+=expenses();
 if(state.tab==="Ads")body+=ads();
 if(state.tab==="Ledger")body+=ledger();
 if(state.tab==="Claude AI"&&role()==="owner")body+=claudePanel();
+if(state.tab==="CEO Goals"&&role()==="owner")body+=ceoPanel();
 body+='<div class="foot">Financial reports include verified jobs and expenses only. Ad figures are imported account spend and require periodic sync. Investor-supported costs are shown separately. This dashboard is not a substitute for bank reconciliation or accounting review.</div>';root.innerHTML=body;
 }
 
 
+const ceoState={goals:[],actions:[],reasoning:[],loaded:false,error:"",busy:false};
+async function loadCeo(){
+ if(role()!=="owner")return;
+ const [g,a,r]=await Promise.all([
+ db.from("jmags_ceo_goals").select("*").order("created_at",{ascending:false}).limit(30),
+ db.from("jmags_ceo_actions").select("*").order("created_at",{ascending:false}).limit(150),
+ db.from("jmags_ceo_reasoning").select("*").order("created_at",{ascending:false}).limit(150)
+ ]);
+ ceoState.goals=g.data||[];ceoState.actions=a.data||[];ceoState.reasoning=r.data||[];
+ ceoState.error=g.error?.message||a.error?.message||r.error?.message||"";
+ ceoState.loaded=true;
+}
+function ceoPanel(){
+ if(!ceoState.loaded&&!ceoState.busy){ceoState.busy=true;loadCeo().then(()=>{ceoState.busy=false;if(state.tab==="CEO Goals")render()}).catch(e=>{ceoState.error=e.message;ceoState.busy=false})}
+ let out='<section class="panel"><h2>CEO Goal Engine · Cavite</h2><p class="hint">Create a CEO command; the system calculates a finance-backed plan using live ledger and advertising data. Department proposals are advisory, not automatic staff assignments or Meta writes.</p>';
+ if(ceoState.error)out+=banner(h(ceoState.error),"bad");
+ out+='<form id="ceoGoalForm"><label>Owner command<textarea name="command" required minlength="12" placeholder="Increase Cavite sales by ₱200,000 this month"></textarea></label><div class="flex"><label>Goal type<select name="target_type"><option value="additional_revenue">Additional revenue above current run-rate</option><option value="total_revenue">Total revenue target</option></select></label><label>Target (PHP)<input name="target_amount" type="number" min="1" step="1" value="200000" required></label><label>Month<input name="month" type="month" value="'+h(dateLocal().slice(0,7))+'" required></label></div><button class="primary" type="submit">Create goal & department plan (no external actions)</button></form></section>';
+ const goals=ceoState.goals;
+ for(const g of goals){
+ const m=String(g.month).slice(0,7);
+ const jobs=state.jobs.filter(x=>x.branch==="cavite"&&String(x.job_date||"").slice(0,7)===m&&x.status==="verified");
+ const submitted=state.jobs.filter(x=>x.branch==="cavite"&&String(x.job_date||"").slice(0,7)===m&&x.status==="submitted");
+ const revenue=sum(jobs,"collected"),contribution=sum(jobs,"contribution");
+ const ads=state.ads.filter(x=>x.branch==="cavite"&&String(x.ad_date||"").slice(0,7)===m);
+ const spend=sum(ads,"amount"),attributed=jobs.filter(x=>String(x.ad_campaign||"").trim()).length;
+ const start=new Date(m+"-01T00:00:00"),totalDays=new Date(start.getFullYear(),start.getMonth()+1,0).getDate();
+ const elapsed=m===dateLocal().slice(0,7)?Math.min(totalDays,Number(dateLocal().slice(8))):m<dateLocal().slice(0,7)?totalDays:0;
+ const baseline=Number(g.baseline_revenue||0),target=Number(g.target_amount);
+ const goalTotal=g.target_type==="additional_revenue"?baseline+target:target;
+ const gap=Math.max(0,goalTotal-revenue),remaining=Math.max(0,totalDays-elapsed);
+ const avg=jobs.length?revenue/jobs.length:null;
+ const actions=ceoState.actions.filter(x=>x.goal_id===g.id),notes=ceoState.reasoning.filter(x=>x.goal_id===g.id);
+ out+='<section class="panel"><h2>'+h(m)+' · '+h(g.command)+'</h2><p class="hint">Goal: '+money(goalTotal)+' · '+h(g.target_type)+' · '+h(g.status)+'</p><div class="ledger-kpis"><div class="ledger-kpi"><small>Verified revenue</small><strong>'+money(revenue)+'</strong></div><div class="ledger-kpi"><small>Revenue gap</small><strong>'+money(gap)+'</strong></div><div class="ledger-kpi"><small>Required daily revenue</small><strong>'+(remaining?money(gap/remaining):"Deadline passed")+'</strong></div><div class="ledger-kpi"><small>Verified repairs</small><strong>'+jobs.length+'</strong></div><div class="ledger-kpi"><small>Submitted (not final)</small><strong>'+submitted.length+'</strong></div><div class="ledger-kpi"><small>Ad spend recorded</small><strong>'+money(spend)+'</strong></div></div>';
+ out+='<p class="hint">Contribution from verified jobs: '+money(contribution)+'. Campaign-attributed verified jobs: '+attributed+'. '+(avg?'Average verified repair: '+money(avg)+'. Estimated additional jobs needed: '+Math.ceil(gap/avg)+'.':'No verified average repair value yet; job count forecast unavailable.')+' Recorded ad spend is not proof of ad-attributed profit. Forecast excludes unverified submissions.</p>';
+ out+='<h3>Department decisions · Owner approval</h3>';
+ for(const a of actions){out+='<div class="panel"><strong>'+h(a.department.replaceAll("_"," "))+' · '+h(a.action_title)+'</strong> '+status(a.status)+'<p>'+h(a.rationale)+'</p><p class="hint">Risk: '+h(a.risk)+'</p>'+(a.status==="proposed"?'<button class="secondary" data-ceo-review="'+a.id+'" data-ceo-approve="yes">Approve plan</button> <button class="secondary" data-ceo-review="'+a.id+'" data-ceo-approve="no">Reject</button>':'')+'</div>'}
+ out+='<h3>Reasoning & audit history</h3>'+notes.slice(0,15).map(x=>'<p class="hint">'+h(new Date(x.created_at).toLocaleString("en-PH"))+' · '+h(x.department)+': '+h(x.statement)+'</p>').join("");
+ out+='</section>';
+ }
+ return out;
+}
+document.addEventListener("submit",async e=>{
+ if(e.target?.id!=="ceoGoalForm")return;e.preventDefault();if(ceoState.busy||role()!=="owner")return;
+ const fd=new FormData(e.target),target=Number(fd.get("target_amount")),month=String(fd.get("month")),command=String(fd.get("command")||"").trim(),kind=String(fd.get("target_type"));
+ if(!Number.isFinite(target)||target<=0||command.length<12)return toast("Enter a valid command and target");
+ ceoState.busy=true;
+ try{
+ const monthJobs=state.jobs.filter(x=>x.branch==="cavite"&&x.status==="verified"&&String(x.job_date).slice(0,7)===month);
+ const revenue=sum(monthJobs,"collected");
+ const baseline=kind==="additional_revenue"?revenue:0;
+ const {data,error}=await db.from("jmags_ceo_goals").insert({branch:"cavite",month:month+"-01",target_type:kind,target_amount:target,baseline_revenue:baseline,command}).select("id").single();
+ if(error)throw error;
+ const id=data.id,unverified=state.jobs.filter(x=>x.branch==="cavite"&&x.status==="submitted"&&String(x.job_date).slice(0,7)===month).length;
+ const monthAds=state.ads.filter(x=>x.branch==="cavite"&&String(x.ad_date).slice(0,7)===month);
+ const spend=sum(monthAds,"amount"),attributed=monthJobs.filter(x=>String(x.ad_campaign||"").trim()).length;
+ const goalTotal=kind==="additional_revenue"?baseline+target:target,gap=Math.max(0,goalTotal-revenue);
+ const proposals=[
+ ["general_manager","Coordinate monthly revenue recovery","Current verified revenue "+money(revenue)+" against goal "+money(goalTotal)+", leaving "+money(gap)+". Review department capacity and progress daily; escalate blockers, do not commit spend."],
+ ["finance","Reconcile paid and submitted jobs","Verified revenue "+money(revenue)+"; "+unverified+" submitted jobs excluded from finalized totals. Validate collections, costs, contribution and payment evidence before forecasting profit."],
+ ["sales","Improve booking-to-repair conversion","Investigate inquiry follow-up, confirmed bookings and cancellations. No reliable lead-to-job conversion rate is available from verified finance records alone."],
+ ["operations","Confirm technician and dispatch capacity","Check technicians, repair turnaround, parts availability and completion bottlenecks before committing to extra sales. "+unverified+" submitted finance records need review."],
+ ["media_buyer","Protect ads; measure profitable attribution","Recorded Cavite ad spend this month "+money(spend)+"; verified campaign-attributed repairs "+attributed+". Keep the ₱500/day policy and Meta writes disabled. Do not infer campaign ROI without verified attribution."]
+ ];
+ for(const [dept,title,reason] of proposals){const rr=await db.rpc("jmags_ceo_propose_action",{p_goal_id:id,p_department:dept,p_title:title,p_rationale:reason,p_evidence:{verified_revenue:revenue,ad_spend:spend,verified_jobs:monthJobs.length,attributed_jobs:attributed,submitted_jobs:unverified,month}});if(rr.error)throw rr.error;}
+ await loadCeo();toast("CEO goal and five department plans saved. No Meta writes.");render();
+ }catch(err){toast("Goal setup issue: "+err.message);await loadCeo();render()}finally{ceoState.busy=false}
+});
+document.addEventListener("click",async e=>{
+ const b=e.target.closest("button[data-ceo-review]");if(!b)return;
+ if(role()!=="owner")return toast("Owner only");
+ if(!confirm("Record this planning decision? This does not authorize spending or external execution."))return;
+ const {error}=await db.rpc("jmags_ceo_review_action",{p_action_id:Number(b.dataset.ceoReview),p_approve:b.dataset.ceoApprove==="yes"});
+ if(error)return toast(error.message);
+ await loadCeo();render();toast("Planning review recorded; no external action.");
+});
 const CLAUDE_DIRECT_ENABLED = false; // Owner selected Claude Pro-only mode: no chargeable API use.
 function claudePanel(){
  const month=h(state.month),branch=h(state.branch);
