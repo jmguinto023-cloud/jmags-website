@@ -708,10 +708,10 @@ document.addEventListener("click",async e=>{
 });
 function ads(){if(role()==="owner"&&!mediaBuyer.loaded&&!mediaBuyer.busy)loadMediaBuyer().then(()=>{if(state.tab==="Ads")render()});return mediaBuyerPanel();}
 
-const liveMediaBuyer={data:null,review:[],historical:[],loading:false,error:"",loadedAt:0};
+const liveMediaBuyer={data:null,review:[],historical:[],loading:false,error:"",loadedAt:0,lastAttempt:0};
 async function fetchLiveMediaBuyer(){
  if(liveMediaBuyer.loading||!state.user||role()!=="owner")return;
- liveMediaBuyer.loading=true;liveMediaBuyer.error="";
+ liveMediaBuyer.loading=true;liveMediaBuyer.lastAttempt=Date.now();liveMediaBuyer.error="";
  try{
   const {data:{session}}=await db.auth.getSession();
   if(!session?.access_token)throw Error("Please sign in again.");
@@ -723,14 +723,14 @@ async function fetchLiveMediaBuyer(){
  finally{liveMediaBuyer.loading=false;if(state.tab==="AI Media Buyer")render();}
 }
 function liveMediaBuyerPanel(){
- if(!liveMediaBuyer.loading&&(!liveMediaBuyer.loadedAt||Date.now()-liveMediaBuyer.loadedAt>60000))fetchLiveMediaBuyer();
+ if(!liveMediaBuyer.loading&&(!liveMediaBuyer.lastAttempt||Date.now()-liveMediaBuyer.lastAttempt>30000))fetchLiveMediaBuyer();
  const d=liveMediaBuyer.data;
  let out='<section class="panel"><div class="sectiontitle"><h2>AI Media Buyer · Cavite</h2><button class="secondary" id="mediaLiveRefresh">↻ Refresh</button></div><p class="hint">Live Supabase campaign monitoring. Messaging conversations are not verified customer bookings. Automatic Meta actions remain locked until safety preflight passes.</p>';
  if(liveMediaBuyer.error)out+=banner(h(liveMediaBuyer.error),"bad");
  if(!d)return out+'<p class="hint">'+(liveMediaBuyer.loading?"Loading live campaign data…":"Waiting for live reporting.")+'</p></section>';
  const policy=d.policy||{},pre=d.preflight||{},a=d.attribution||{},review=d.review_queue||{};
  out+='<div class="banner '+(policy.meta_writes_enabled&&pre.ready?"good":"warn")+'"><strong>Meta execution: '+(policy.meta_writes_enabled&&pre.ready?"Eligible for approved actions":"SAFETY LOCKED")+'</strong> · '+h((pre.reasons||[]).join(", ")||"No preflight blockers")+'</div>';
- out+='<div class="ledger-kpis"><div class="ledger-kpi"><small>Verified attributed jobs</small><strong>'+Number(pre.verified_attributed_jobs||0)+'</strong></div><div class="ledger-kpi"><small>Unverified jobs</small><strong>'+Number(a.unverified||0)+'</strong></div><div class="ledger-kpi"><small>Payments to verify</small><strong>'+Number(review.verify_payment||0)+'</strong></div><div class="ledger-kpi"><small>Actions in 24h</small><strong>'+Number(pre.actions_last_24h||0)+'</strong></div></div>';
+ out+='<div class="ledger-kpis"><div class="ledger-kpi"><small>Verified attributed jobs</small><strong>'+Number(pre.verified_attributed_jobs||0)+'</strong></div><div class="ledger-kpi"><small>Paid · awaiting campaign</small><strong>'+Number(a.verified_unmatched||0)+'</strong></div><div class="ledger-kpi"><small>Other unverified jobs</small><strong>'+Number(a.unverified||0)+'</strong></div><div class="ledger-kpi"><small>Payments to verify</small><strong>'+Number(review.verify_payment||0)+'</strong></div><div class="ledger-kpi"><small>Actions in 24h</small><strong>'+Number(pre.actions_last_24h||0)+'</strong></div></div>';
 
  out+='<h3>Meta campaign performance · recent 7 days</h3><div class="mb-card-grid">';
  for(const x of d.campaigns||[])out+='<article class="mb-record"><div class="mb-record-title">'+h(x.campaign||"Unnamed campaign")+'</div><div class="mb-facts"><div><small>Spend</small><strong>'+money(Number(x.spend_php||0))+'</strong></div><div><small>Messages</small><strong>'+Number(x.messages||0)+'</strong></div><div><small>Cost / message</small><strong>'+(x.cost_per_message_php==null?"—":money(Number(x.cost_per_message_php)))+'</strong></div></div><small class="mb-muted">Last sync: '+h(x.last_sync?new Date(x.last_sync).toLocaleString("en-PH",{timeZone:"Asia/Manila"}):"—")+'</small></article>';
@@ -804,6 +804,7 @@ const opsRealtime=db.channel("jmags-finance-live")
  .subscribe();
 window.addEventListener("focus",refreshOpsFinanceSoon);
 document.addEventListener("visibilitychange",()=>{if(!document.hidden)refreshOpsFinanceSoon()});
+setInterval(()=>{if(state.user&&role()==="owner"&&state.tab==="AI Media Buyer"&&!liveMediaBuyer.loading&&Date.now()-liveMediaBuyer.lastAttempt>=30000)fetchLiveMediaBuyer().catch(()=>{})},5000);
 setInterval(()=>{if(state.user&&role()==="owner"&&state.tab==="CEO Goals"&&!ceoState.busy&&!(document.activeElement&&document.activeElement.closest&&document.activeElement.closest("form")))loadCeo().then(render).catch(()=>{})},15000);
 setInterval(()=>{if(state.user&&!recoveryMode&&["owner","staff","tech"].includes(role())&&!(document.activeElement&&document.activeElement.closest&&document.activeElement.closest("form")))load().catch(showStartupError)},60000);
 })();
