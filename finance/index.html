@@ -300,18 +300,32 @@ body+='<div class="foot">Financial reports include verified jobs and expenses on
 const ceoState={goals:[],actions:[],reasoning:[],audit:[],meetings:[],directChat:[],managerRuns:[],loaded:false,error:"",busy:false};
 async function loadCeo(){
  if(role()!=="owner")return;
- const [g,a,r,audit,meetings,directChat,managerRuns]=await Promise.all([
+ const [g,a,r,audit,meetings,directChat,managerRuns,teamGoals,teamDecisions,teamCouncil]=await Promise.all([
  db.from("jmags_ceo_goals").select("*").order("created_at",{ascending:false}).limit(30),
  db.from("jmags_ceo_actions").select("*").order("created_at",{ascending:false}).limit(150),
  db.from("jmags_ceo_reasoning").select("*").order("created_at",{ascending:false}).limit(150),
  db.from("jmags_ops_finance_audit").select("job_no,ops_status,finance_status,sync_state,ops_quote,finance_collected,quote_minus_collected,ops_ad_source,finance_ad_campaign,completed_date,ops_payment_status").limit(1000),
  db.from("jmags_ceo_council_messages").select("*").order("created_at",{ascending:false}).limit(200),
  db.from("jmags_ceo_direct_chat").select("*").order("id",{ascending:false}).limit(100),
- db.from("jmags_manager_work_log").select("*").order("id",{ascending:false}).limit(75)
+ db.from("jmags_manager_work_log").select("*").order("id",{ascending:false}).limit(75),
+ db.from("jmags_ai_team_goals").select("*").eq("goal_key","balanced_growth_2026").limit(1),
+ db.from("jmags_ai_team_decisions").select("*").order("created_at",{ascending:false}).limit(30),
+ db.from("jmags_ai_team_council").select("*").order("created_at",{ascending:false}).limit(50)
  ]);
- ceoState.goals=g.data||[];ceoState.actions=a.data||[];ceoState.reasoning=r.data||[];ceoState.audit=audit.data||[];ceoState.meetings=meetings.data||[];ceoState.directChat=directChat.data||[];ceoState.managerRuns=managerRuns.data||[];
+ ceoState.goals=g.data||[];ceoState.actions=a.data||[];ceoState.reasoning=r.data||[];ceoState.audit=audit.data||[];ceoState.meetings=meetings.data||[];ceoState.directChat=directChat.data||[];ceoState.managerRuns=managerRuns.data||[];ceoState.teamGoals=teamGoals.data||[];ceoState.teamDecisions=teamDecisions.data||[];ceoState.teamCouncil=teamCouncil.data||[];
  ceoState.error=g.error?.message||a.error?.message||r.error?.message||audit.error?.message||meetings.error?.message||directChat.error?.message||managerRuns.error?.message||"";
  ceoState.loaded=true;
+}
+function teamGoalPanel(){
+ const g=(ceoState.teamGoals||[])[0];
+ if(!g)return '<section class="panel"><h2>AI Management Team · Balanced Growth</h2><p class="hint">Goal record not yet loaded. No autonomous actions are implied.</p></section>';
+ const decisions=(ceoState.teamDecisions||[]).filter(x=>x.goal_id===g.id);
+ const council=(ceoState.teamCouncil||[]).filter(x=>x.goal_id===g.id);
+ let out='<section class="panel"><h2>AI Management Team · Balanced Growth</h2><p><strong>'+h(g.objective)+'</strong></p><p class="hint">Scope: both branches; Media Buyer: Cavite only. Independent analysis and recommendations; consequential actions require CEO approval.</p>';
+ out+='<div class="ledger-kpis"><div class="ledger-kpi"><small>Decision proposals</small><strong>'+decisions.length+'</strong></div><div class="ledger-kpi"><small>Council responses</small><strong>'+council.length+'</strong></div><div class="ledger-kpi"><small>Approved</small><strong>'+decisions.filter(x=>x.status==="approved").length+'</strong></div><div class="ledger-kpi"><small>Executed</small><strong>'+decisions.filter(x=>x.status==="executed"||x.status==="measured").length+'</strong></div></div>';
+ if(!decisions.length)out+='<p class="hint">No goal-specific team decisions recorded yet. AI manager reports are not the same as approved or executed decisions.</p>';
+ for(const d of decisions.slice(0,8)){out+='<details class="ledger-review"><summary><strong>'+h(d.manager)+'</strong> · '+h(d.status)+' · '+h(d.proposal)+'</summary><p><strong>Reason:</strong> '+h(d.rationale)+'</p><p><strong>Approval:</strong> '+(d.requires_ceo_approval?'CEO required':'Policy controlled')+'</p><pre style="white-space:pre-wrap;overflow-wrap:anywhere">'+h(JSON.stringify(d.evidence||{},null,2))+'</pre></details>';}
+ return out+'</section>';
 }
 function managerWorkPanel(){
  const names=["General Manager","Finance Manager","Sales Manager","Operations Manager","Media Buyer"];
@@ -348,7 +362,7 @@ const cards=names.map(name=>{
 }
 function ceoPanel(){
  if(!ceoState.loaded&&!ceoState.busy){ceoState.busy=true;loadCeo().then(()=>{ceoState.busy=false;if(state.tab==="CEO Goals")render()}).catch(e=>{ceoState.error=e.message;ceoState.busy=false})}
- let out=managerWorkPanel()+'<section class="panel"><h2>CEO Goal Engine · Cavite</h2><p class="hint">Create a CEO command; the system calculates a finance-backed plan using live ledger and advertising data. Department proposals are advisory, not automatic staff assignments or Meta writes.</p>';
+ let out=teamGoalPanel()+managerWorkPanel()+'<section class="panel"><h2>CEO Goal Engine · Cavite</h2><p class="hint">Create a CEO command; the system calculates a finance-backed plan using live ledger and advertising data. Department proposals are advisory, not automatic staff assignments or Meta writes.</p>';
  if(ceoState.error)out+=banner(h(ceoState.error),"bad");
  const hasLiveData=ceoState.loaded&&!ceoState.error;
  const financePending=ceoState.audit.filter(x=>x.sync_state==="needs_payment_verification").length;
