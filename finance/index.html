@@ -428,7 +428,50 @@ async function loadAdHealth(){
  finally{state.adHealthLoading=false;if(state.tab==="Ads")render();}
 }
 
-function ads(){return adHealthPanel();}
+const mediaBuyer={rows:[],loaded:false,error:"",busy:false};
+async function loadMediaBuyer(){
+ if(!state.user||role()!=="owner")return;
+ const {data,error}=await db.from("jmags_ad_decisions").select("id,branch,campaign,campaign_id,proposed_action,rationale,evidence_window,risk_notes,status,created_at,reviewed_at").order("created_at",{ascending:false}).limit(80);
+ mediaBuyer.error=error?.message||"";mediaBuyer.rows=data||[];mediaBuyer.loaded=true;
+}
+function mediaBuyerPanel(){
+ if(role()!=="owner")return "";
+ let out='<section class="panel" id="media-buyer"><h2>ChatGPT AI Media Buyer · Owner Approval</h2><p class="hint">Decisions are proposals only. Approval is recorded in JMAGS, but never executes a Meta Ads change. Review campaign results and actual paid-job contribution before approving. Winning ads and their social proof remain protected.</p>';
+ if(mediaBuyer.error)out+=banner(h(mediaBuyer.error),"bad");
+ out+='<div class="banner warn"><strong>Execution lock:</strong> No Meta write integration is enabled in this dashboard. A proposal approved here is NOT an executed campaign change. Do not treat approval as proof of delivery.</div>';
+ out+='<details><summary><strong>Create a media-buyer decision proposal</strong></summary><form id="mediaBuyerForm"><div class="row"><div><label>Branch<select name="branch"><option value="cavite">Cavite</option><option value="san_pablo">San Pablo</option></select></label><label>Campaign name<input name="campaign" required minlength="3" maxlength="200"></label><label>Meta campaign ID<input name="campaign_id" required maxlength="80"></label></div><div><label>Recommendation<select name="proposed_action"><option value="keep">Keep unchanged</option><option value="test">Test separately</option><option value="scale">Scale budget</option><option value="reduce">Reduce budget</option><option value="pause">Pause</option><option value="creative_change">Change creative</option><option value="restart">Restart</option><option value="duplicate">Duplicate</option></select></label><label>Evidence period<input name="evidence_window" placeholder="Last 7 completed days" required maxlength="100"></label><label>Risk / learning-phase notes<textarea name="risk_notes" rows="2" required maxlength="1500"></textarea></label></div></div><label>Evidence and reasoning<textarea name="rationale" rows="3" required minlength="12" maxlength="3000" placeholder="Performance, message quality, paid jobs, and why this action is justified"></textarea></label><button class="primary" type="submit">Save proposal for owner review</button></form></details>';
+ if(!mediaBuyer.loaded)out+='<p class="hint">Decision queue loading…</p>';
+ else if(!mediaBuyer.rows.length)out+='<p class="hint">No media-buyer decisions submitted yet. This does not mean campaigns need changing.</p>';
+ else{
+  const rows=mediaBuyer.rows.map(r=>'<tr>'+cell(h(r.created_at?.slice(0,10)))+cell(h(r.campaign)+'<div class="small">'+h(r.campaign_id)+'</div>')+cell(h(r.proposed_action))+cell('<details><summary>Review evidence</summary><p>'+h(r.rationale)+'</p><p><strong>Window:</strong> '+h(r.evidence_window)+'</p><p><strong>Risk:</strong> '+h(r.risk_notes)+'</p></details>')+cell(h(r.status))+cell(r.status==='pending'?'<button type="button" class="smallbtn" data-media-decision="'+Number(r.id)+'" data-media-approve="yes">Approve</button><button type="button" class="smallbtn" data-media-decision="'+Number(r.id)+'" data-media-approve="no">Reject</button>':"—")+'</tr>');
+  out+='<div class="scroll">'+table(["Date","Campaign","Recommendation","Evidence","Status","Owner review"],rows)+'</div>';
+ }
+ out+='</section>';return out;
+}
+document.addEventListener("submit",async e=>{
+ if(e.target?.id!=="mediaBuyerForm")return;
+ e.preventDefault();if(mediaBuyer.busy)return;
+ if(role()!=="owner"){toast("Owner access required");return;}
+ const form=e.target,fd=new FormData(form),payload={};
+ for(const key of ["branch","campaign","campaign_id","proposed_action","evidence_window","risk_notes","rationale"])payload[key]=String(fd.get(key)||"").trim();
+ if(payload.rationale.length<12||!payload.campaign_id||!payload.evidence_window||!payload.risk_notes){toast("Complete all evidence fields");return;}
+ mediaBuyer.busy=true;
+ try{const {error}=await db.from("jmags_ad_decisions").insert(payload);if(error)throw error;await loadMediaBuyer();toast("Proposal saved; no Meta changes made");render();}
+ catch(err){toast("Proposal not saved: "+String(err.message||err));}
+ finally{mediaBuyer.busy=false;}
+});
+document.addEventListener("click",async e=>{
+ const btn=e.target.closest("button[data-media-decision]");if(!btn||mediaBuyer.busy)return;
+ if(role()!=="owner"){toast("Owner access required");return;}
+ const id=Number(btn.dataset.mediaDecision),approve=btn.dataset.mediaApprove==="yes";
+ const row=mediaBuyer.rows.find(x=>x.id===id);if(!row)return;
+ if(!confirm((approve?"Approve":"Reject")+" proposal for "+row.campaign+"? This records your decision ONLY; it will not change Meta Ads."))return;
+ mediaBuyer.busy=true;
+ try{const {error}=await db.rpc("jmags_review_ad_decision",{p_id:id,p_approve:approve});if(error)throw error;await loadMediaBuyer();toast("Decision recorded; Meta Ads unchanged");render();}
+ catch(err){toast("Review failed: "+String(err.message||err));}
+ finally{mediaBuyer.busy=false;}
+});
+function ads(){if(role()==="owner"&&!mediaBuyer.loaded&&!mediaBuyer.busy)loadMediaBuyer().then(()=>{if(state.tab==="Ads")render()});return mediaBuyerPanel()+adHealthPanel();}
 function ledger(){
  const rows=state.jobs.filter(x=>(state.branch==="all"||x.branch===state.branch)&&fMonth(x.job_date)&&(state.ledgerStatusFilter==="void"?x.status==="void":state.ledgerStatusFilter==="all"?["submitted","verified"].includes(x.status):x.status===state.ledgerStatusFilter)).sort((a,b)=>String(b.job_date).localeCompare(String(a.job_date)));
  const valid=rows.filter(x=>x.status==="submitted"||x.status==="verified");
