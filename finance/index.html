@@ -428,11 +428,14 @@ async function loadAdHealth(){
  finally{state.adHealthLoading=false;if(state.tab==="Ads")render();}
 }
 
-const mediaBuyer={rows:[],loaded:false,error:"",busy:false};
+const mediaBuyer={rows:[],events:[],loaded:false,error:"",busy:false};
 async function loadMediaBuyer(){
  if(!state.user||role()!=="owner")return;
- const {data,error}=await db.from("jmags_ad_decisions").select("id,branch,campaign,campaign_id,proposed_action,rationale,evidence_window,risk_notes,status,created_at,reviewed_at").order("created_at",{ascending:false}).limit(80);
- mediaBuyer.error=error?.message||"";mediaBuyer.rows=data||[];mediaBuyer.loaded=true;
+ const [decisions,events]=await Promise.all([
+  db.from("jmags_ad_decisions").select("id,branch,campaign,campaign_id,proposed_action,rationale,evidence_window,risk_notes,status,created_at,reviewed_at").order("created_at",{ascending:false}).limit(80),
+  db.from("jmags_ad_decision_events").select("id,decision_id,event_type,statement,created_at").order("created_at",{ascending:false}).limit(120)
+ ]);
+ mediaBuyer.error=decisions.error?.message||events.error?.message||"";mediaBuyer.rows=decisions.data||[];mediaBuyer.events=events.data||[];mediaBuyer.loaded=true;
 }
 function mediaBuyerPanel(){
  if(role()!=="owner")return "";
@@ -446,8 +449,22 @@ function mediaBuyerPanel(){
   const rows=mediaBuyer.rows.map(r=>'<tr>'+cell(h(r.created_at?.slice(0,10)))+cell(h(r.campaign)+'<div class="small">'+h(r.campaign_id)+'</div>')+cell(h(r.proposed_action))+cell('<details><summary>Review evidence</summary><p>'+h(r.rationale)+'</p><p><strong>Window:</strong> '+h(r.evidence_window)+'</p><p><strong>Risk:</strong> '+h(r.risk_notes)+'</p></details>')+cell(h(r.status))+cell(r.status==='pending'?'<button type="button" class="smallbtn" data-media-decision="'+Number(r.id)+'" data-media-approve="yes">Approve</button><button type="button" class="smallbtn" data-media-decision="'+Number(r.id)+'" data-media-approve="no">Reject</button>':"—")+'</tr>');
   out+='<div class="scroll">'+table(["Date","Campaign","Recommendation","Evidence","Status","Owner review"],rows)+'</div>';
  }
- out+='</section>';return out;
+ out+='<div style="margin-top:18px"><div class="sectiontitle"><h3>Media Buyer Movement & Decision Statements</h3><button type="button" class="secondary" id="refreshMediaBuyer">↻ Refresh activity</button></div><p class="hint">Timestamped proposals and owner reviews. Each statement explains the decision. No statement represents a live Meta action unless execution is independently verified.</p>';
+ if(!mediaBuyer.events.length)out+='<p class="hint">No recorded media-buyer activity yet. New proposals and owner reviews will appear here.</p>';
+ else{
+  out+='<div style="display:grid;gap:10px">';
+  for(const ev of mediaBuyer.events.slice(0,40)){
+   const dt=new Date(ev.created_at).toLocaleString("en-PH",{timeZone:"Asia/Manila",dateStyle:"medium",timeStyle:"short"});
+   out+='<article style="border:1px solid #dce4f0;border-radius:12px;padding:12px;background:#f9fbff"><div class="sectiontitle"><strong>'+h(ev.event_type.toUpperCase())+' · #'+Number(ev.decision_id)+'</strong><small>'+h(dt)+' PHT</small></div><p style="margin:8px 0 0;white-space:pre-wrap">'+h(ev.statement)+'</p></article>';
+  }
+  out+='</div>';
+ }
+ out+='</div></section>';return out;
 }
+document.addEventListener("click",async e=>{
+ if(e.target?.id!=="refreshMediaBuyer")return;
+ await loadMediaBuyer();render();
+});
 document.addEventListener("submit",async e=>{
  if(e.target?.id!=="mediaBuyerForm")return;
  e.preventDefault();if(mediaBuyer.busy)return;
