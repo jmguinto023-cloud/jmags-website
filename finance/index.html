@@ -519,6 +519,20 @@ document.addEventListener("click",async e=>{const b=e.target.closest("button");i
 document.addEventListener("change",e=>{if(e.target.id==="ledgerStatusFilter"){state.ledgerStatusFilter=e.target.value;state.ledgerReviewId=null;render();return}if(e.target.id==="month"){state.month=e.target.value;state.claudeAnswer="";state.claudeMessage="";state.claudeQuestion="";state.claudeBrief="";render()}if(e.target.id==="branch"){state.branch=e.target.value;state.claudeAnswer="";state.claudeMessage="";state.claudeQuestion="";state.claudeBrief="";render()}});
 db.auth.onAuthStateChange((event,_session)=>{if(event==="PASSWORD_RECOVERY"){recoveryMode=true;showRecovery()}});login();check().catch(showStartupError);
 window.addEventListener("unhandledrejection",event=>{if(root?.textContent?.includes("Loading your secure dashboard"))showStartupError(event.reason||new Error("A service did not respond."))});
+// Realtime finance changes from JMAGS Operations, with safe debounced refresh.
+let opsRefreshTimer=null;
+function refreshOpsFinanceSoon(){
+ if(!state.user||recoveryMode||state.working)return;
+ if(document.activeElement&&document.activeElement.closest&&document.activeElement.closest("form"))return;
+ if(opsRefreshTimer)clearTimeout(opsRefreshTimer);
+ opsRefreshTimer=setTimeout(()=>{opsRefreshTimer=null;load().catch(()=>{});if(state.tab==="Ads")loadMediaBuyer().then(render).catch(()=>{});},700);
+}
+const opsRealtime=db.channel("jmags-finance-live")
+ .on("postgres_changes",{event:"*",schema:"public",table:"jmags_finance_jobs"},refreshOpsFinanceSoon)
+ .on("postgres_changes",{event:"*",schema:"public",table:"jmags_finance_expenses"},refreshOpsFinanceSoon)
+ .subscribe();
+window.addEventListener("focus",refreshOpsFinanceSoon);
+document.addEventListener("visibilitychange",()=>{if(!document.hidden)refreshOpsFinanceSoon()});
 setInterval(()=>{if(state.user&&!recoveryMode&&["owner","staff","tech"].includes(role())&&!(document.activeElement&&document.activeElement.closest&&document.activeElement.closest("form")))load().catch(showStartupError)},60000);
 })();
 </script>
