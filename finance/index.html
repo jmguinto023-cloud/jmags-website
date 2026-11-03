@@ -713,39 +713,11 @@ async function loadMediaBuyer(){
  mediaBuyer.error=decisions.error?.message||events.error?.message||"";mediaBuyer.rows=decisions.data||[];mediaBuyer.events=events.data||[];mediaBuyer.loaded=true;await loadBalancedPolicy();
 }
 function mediaBuyerPanel(){
- if(role()!=="owner")return "";
- let out='<section class="panel" id="media-buyer"><h2>JMAGS AI Media Buyer · Decisions & Activity</h2><p class="hint">Decisions are proposals only. Approved Pause/Scale/Reduce decisions authorize the scheduled execution agent; Keep and other decisions do not change Meta automatically. Review campaign results and actual paid-job contribution before approving. Winning ads and their social proof remain protected.</p>';
- if(mediaBuyer.error)out+=banner(h(mediaBuyer.error),"bad");
- const bp=balancedPolicy;
- out+='<div class="banner '+(bp&&bp.meta_writes_enabled?'warn':'good')+'"><strong>Balanced policy · Cavite:</strong> '+(bp?(bp.meta_writes_enabled?'Meta writes enabled':'Meta writes locked until verified'):'Loading policy')+'</div>';
- out+='<div class="ledger-kpis">'+
- '<div class="ledger-kpi"><small>Verified Cavite repairs</small><strong>'+balancedVerifiedJobs+'</strong></div>'+
- '<div class="ledger-kpi"><small>Campaign-attributed verified repairs</small><strong>'+balancedAttributedJobs+'</strong></div>'+
- '<div class="ledger-kpi"><small>Minimum attributed repairs</small><strong>'+(bp?Number(bp.min_verified_attributed_jobs):'—')+'</strong></div>'+
- '<div class="ledger-kpi"><small>Max budget change</small><strong>'+(bp?Number(bp.max_budget_change_pct)+'%':'—')+'</strong></div>'+
- '</div>';
- out+='<p class="hint"><strong>Owner policy:</strong> Routine monitoring and written reasoning run automatically. Pause, scale, reduce, and creative changes require owner review. Winning campaigns are protected. Meta actions are blocked until campaign-attributed verified jobs, a defined account spending cap, and readback checks are available. No unverified ROI claims.</p>';
- if(bp&&!bp.meta_writes_enabled)out+='<div class="banner warn">Meta execution is currently disabled. This is intentional: verified campaign attribution and the account budget cap must be established before any automatic writes.</div>';
- out+='<div class="banner warn"><strong>Execution lock:</strong> Approving a Pause/Scale/Reduce proposal authorizes a separate execution step; it is not proof of execution. Check the execution status and Meta readback before assuming changes took effect.</div>';
- out+='<details><summary><strong>Create a media-buyer decision proposal</strong></summary><form id="mediaBuyerForm"><div class="row"><div><label>Branch<select name="branch"><option value="cavite">Cavite</option><option value="san_pablo">San Pablo</option></select></label><label>Campaign name<input name="campaign" required minlength="3" maxlength="200"></label><label>Meta campaign ID<input name="campaign_id" required maxlength="80"></label></div><div><label>Recommendation<select name="proposed_action"><option value="keep">Keep unchanged</option><option value="test">Test separately</option><option value="scale">Scale budget</option><option value="reduce">Reduce budget</option><option value="pause">Pause</option><option value="creative_change">Change creative</option><option value="restart">Restart</option><option value="duplicate">Duplicate</option></select></label><label>Budget type (only for Scale/Reduce)<select name="budget_type"><option value="">No budget change</option><option value="daily">Daily budget</option><option value="lifetime">Lifetime budget</option></select></label><label>Proposed new budget in PHP (Scale/Reduce only)<input name="budget_php" type="number" min="1" step="0.01" placeholder="e.g. 500"></label><p class="hint">A budget recommendation must specify the exact final budget before owner approval. No automatic creative or duplication actions.</p><label>Evidence period<input name="evidence_window" placeholder="Last 7 completed days" required maxlength="100"></label><label>Risk / learning-phase notes<textarea name="risk_notes" rows="2" required maxlength="1500"></textarea></label></div></div><label>Evidence and reasoning<textarea name="rationale" rows="3" required minlength="12" maxlength="3000" placeholder="Performance, message quality, paid jobs, and why this action is justified"></textarea></label><button class="primary" type="submit">Save proposal for owner review</button></form></details>';
- if(!mediaBuyer.loaded)out+='<p class="hint">Decision queue loading…</p>';
- else if(!mediaBuyer.rows.length)out+='<p class="hint">No media-buyer decisions submitted yet. This does not mean campaigns need changing.</p>';
- else{
-  const rows=mediaBuyer.rows.map(r=>'<tr>'+cell(h(r.created_at?.slice(0,10)))+cell(h(r.campaign)+'<div class="small">'+h(r.campaign_id)+'</div>')+cell(h(r.proposed_action))+cell('<details><summary>Review evidence</summary><p>'+h(r.rationale)+'</p><p><strong>Window:</strong> '+h(r.evidence_window)+'</p><p><strong>Risk:</strong> '+h(r.risk_notes)+'</p></details>')+cell(h(r.status)+(r.execution_state&&r.execution_state!=="not_requested"?'<div class="small">Execution: '+h(r.execution_state)+'</div>':"")+(r.execution_note?'<div class="small">'+h(r.execution_note)+'</div>':""))+cell(r.status==='pending'?'<button type="button" class="smallbtn" data-media-decision="'+Number(r.id)+'" data-media-approve="yes">Approve</button><button type="button" class="smallbtn" data-media-decision="'+Number(r.id)+'" data-media-approve="no">Reject</button>':"—")+'</tr>');
-  out+='<div class="scroll">'+table(["Date","Campaign","Recommendation","Evidence","Status","Owner review"],rows)+'</div>';
- }
- out+='<div style="margin-top:18px"><div class="sectiontitle"><h3>Media Buyer Movement & Decision Statements</h3><button type="button" class="secondary" id="refreshMediaBuyer">↻ Refresh activity</button></div><p class="hint">Timestamped proposals and owner reviews. Each statement explains the decision. Execution statements indicate the result of a separate Meta action; confirm against Meta Ads Manager.</p>';
- if(!mediaBuyer.events.length)out+='<p class="hint">No recorded media-buyer activity yet. New proposals and owner reviews will appear here.</p>';
- else{
-  out+='<div style="display:grid;gap:10px">';
-  for(const ev of mediaBuyer.events.slice(0,40)){
-   const dt=new Date(ev.created_at).toLocaleString("en-PH",{timeZone:"Asia/Manila",dateStyle:"medium",timeStyle:"short"});
-   out+='<article style="border:1px solid #dce4f0;border-radius:12px;padding:12px;background:#f9fbff"><div class="sectiontitle"><strong>'+h(ev.event_type.toUpperCase())+' · #'+Number(ev.decision_id)+'</strong><small>'+h(dt)+' PHT</small></div><p style="margin:8px 0 0;white-space:pre-wrap">'+h(ev.statement)+'</p></article>';
-  }
-  out+='</div>';
- }
- out+='</div></section>';return out;
+ // Legacy proposal and statement panels intentionally removed from the visible dashboard.
+ // Underlying approval records, event history and Meta execution safeguards remain unchanged.
+ return "";
 }
+
 document.addEventListener("click",async e=>{
  if(e.target?.id!=="refreshMediaBuyer")return;
  await loadMediaBuyer();render();
