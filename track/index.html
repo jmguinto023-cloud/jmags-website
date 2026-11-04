@@ -58,6 +58,9 @@ footer{max-width:700px;margin:0 auto;padding:20px 25px 35px;color:#889b8b;font-s
 .match-option:hover,.match-option.selected{border-color:var(--green);background:#203220}
 .match-option .option-name{display:block;font-weight:800;font-size:14px}
 .match-option .option-details{display:block;color:#b1c1b2;font-size:12px;margin-top:4px}
+.paid-field{grid-column:1/-1;border-top:1px solid var(--line);padding-top:18px}
+.paid-field dd{font-size:clamp(22px,4.8vw,28px);letter-spacing:-.025em;color:var(--green);font-weight:850}
+.paid-field .hint{margin:7px 0 0;line-height:1.5;font-size:12px}
 </style>
 </head>
 <body>
@@ -110,6 +113,11 @@ footer{max-width:700px;margin:0 auto;padding:20px 25px 35px;color:#889b8b;font-s
 <div><dt>JMAGS branch</dt><dd id="branch">—</dd></div>
 <div><dt>Appliance</dt><dd id="appliance">—</dd></div>
 <div><dt id="dateLabel">Job date</dt><dd id="jobDate">—</dd></div>
+<div id="paidPriceRow" class="paid-field hidden">
+  <dt>Price paid</dt>
+  <dd id="paidPrice">—</dd>
+  <p class="hint" id="paidPriceHint">Based on actual payments recorded by JMAGS Operations.</p>
+</div>
 </dl>
 <h2>Service progress</h2>
 <p class="description">Typical service stages shown for orientation. They are not a technician activity log; some jobs do not require delivery.</p>
@@ -159,6 +167,13 @@ function render(d) {
  txt("appliance",[(d.brand||"").trim(),(d.appliance||"").trim()].filter(Boolean).join(" ")||"Appliance details pending");
  txt("jobDate",d.date);
  txt("dateLabel",d.dateLabel||"Job date");
+ var completed=d.status==="done";
+ show(document.getElementById("paidPriceRow"),completed);
+ if(completed) {
+   var hasPayment=typeof d.paidAmount==="number" && Number.isFinite(d.paidAmount) && d.paidAmount>=0;
+   txt("paidPrice",hasPayment?new Intl.NumberFormat("en-PH",{style:"currency",currency:"PHP"}).format(d.paidAmount):"Payment not recorded");
+   txt("paidPriceHint",hasPayment?"Total of actual payments recorded in JMAGS Operations. Quotations are excluded.":"No payment record is linked to this completed job yet.");
+ }
  txt("statusNote",d.note||"JMAGS tracks your progress.");
  txt("lastUpdate","Last recorded update: "+time(d.updatedAt));
  txt("lastCheck","Checked "+new Intl.DateTimeFormat("en-PH",{timeZone:"Asia/Manila",timeStyle:"short"}).format(new Date()));
