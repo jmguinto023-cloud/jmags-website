@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#101513">
+<meta name="robots" content="noindex, nofollow">
+<title>Track Your Repair | JMAGS Appliances</title>
+<meta name="description" content="Securely track your JMAGS Appliances repair job using your job order number and registered mobile number.">
+<style>
+:root{color-scheme:dark;--bg:#0b100e;--card:#151d19;--line:#29362e;--fg:#eef8f0;--muted:#9baa9e;--green:#8cfb52;--error:#ff9797;--radius:22px}
+*{box-sizing:border-box}body{margin:0;font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;background:radial-gradient(ellipse at 50% -12%,#224426 0,transparent 56%),var(--bg);color:var(--fg);min-height:100vh}
+a{color:var(--green)}button,input{font:inherit}button{cursor:pointer}button:disabled{opacity:.55;cursor:wait}
+header{max-width:1000px;padding:20px 22px;margin:auto;display:flex;align-items:center;justify-content:space-between;gap:16px}
+.brand{display:flex;align-items:center;gap:11px;text-decoration:none;color:var(--fg);font-size:14px;font-weight:850;letter-spacing:.03em}
+.mark{border:2px solid var(--green);color:var(--green);border-radius:11px;padding:10px 8px;font-weight:950;letter-spacing:-.07em}
+header .home{font-size:13px;text-decoration:none;color:#d7e4db;border:1px solid #405245;border-radius:20px;padding:9px 14px}
+main{max-width:700px;margin:42px auto 70px;padding:0 18px}
+.eyebrow{color:var(--green);font-weight:780;font-size:12px;letter-spacing:.2em;text-transform:uppercase;margin:0 0 12px}
+h1{font-size:clamp(32px,5.5vw,52px);line-height:1.08;letter-spacing:-.055em;margin:0 0 13px;font-weight:850}
+.lede{color:#b2bdb4;line-height:1.55;max-width:570px;font-size:16px;margin:0 0 25px}
+.card{background:linear-gradient(150deg,#1a231e,#111714);border:1px solid #344437;border-radius:var(--radius);padding:clamp(19px,5vw,32px);box-shadow:0 22px 66px #0005}
+.rowhead{display:flex;align-items:center;gap:9px;color:#d4f1d7;font-weight:750;margin-bottom:25px}
+.dot{width:8px;height:8px;background:var(--green);border-radius:50%;box-shadow:0 0 12px #8cfb5288}
+label{display:block;font-size:13px;font-weight:700;color:#d2e1d4;margin-bottom:8px}
+input{width:100%;height:51px;background:#0e1511;color:var(--fg);border:1px solid #3b4e40;border-radius:12px;outline:none;padding:12px 14px;letter-spacing:.02em}
+input:focus{border-color:var(--green);box-shadow:0 0 0 3px #8cfb5228}
+input::placeholder{color:#819487}
+.field{margin-bottom:20px}.hint{color:var(--muted);font-size:12px;margin:7px 0 0}
+.primary{width:100%;background:var(--green);border:0;color:#122010;font-weight:850;border-radius:12px;padding:15px;min-height:51px}
+.primary:hover{background:#b4ff85}.error{background:#3a2021;color:#ffb4b4;border:1px solid #7d3e40;padding:12px 14px;border-radius:12px;margin:0 0 18px;font-size:13px;line-height:1.5}
+.smallprint{margin:20px 0 0;color:var(--muted);font-size:12px;line-height:1.6}.hidden{display:none!important}
+.statusheading{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:12px}
+.kicker{font-weight:700;font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em}
+.status-label{margin:11px 0 10px;letter-spacing:-.035em;font-size:clamp(25px,5vw,36px);font-weight:850}
+.statmeta{display:flex;gap:8px;align-items:center;color:#bed1c1;font-size:12px;flex-wrap:wrap}
+.live{color:var(--green);font-weight:700}.live.off{color:#ffba89}
+.service{display:grid;grid-template-columns:1fr 1fr;gap:13px;border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:21px 0;margin:24px 0}
+.service dt{color:var(--muted);font-size:12px;margin-bottom:7px}.service dd{margin:0;font-size:15px;font-weight:700;overflow-wrap:anywhere}
+h2{margin:0 0 8px;font-size:18px;letter-spacing:-.02em}
+.description{color:var(--muted);font-size:12px;line-height:1.5;margin:0 0 17px}
+.timeline{padding:0;margin:0;list-style:none;display:grid;gap:13px}
+.timeline li{display:flex;align-items:center;gap:12px;color:#8d9d8f;font-size:14px}
+.circle{display:grid;place-items:center;flex-shrink:0;width:28px;height:28px;border-radius:50%;border:1px solid #4b604f;font-size:12px;font-weight:850}
+.timeline li.current{color:var(--green);font-weight:750}
+.timeline li.current .circle{background:var(--green);border-color:var(--green);color:#132010}
+.timeline li.past{color:#dae8dc}.timeline li.past .circle{border-color:#537d57;color:#b9eaa7}
+.actions{display:flex;gap:12px;margin-top:26px;flex-wrap:wrap}
+.secondary{border:1px solid #577159;background:#1b2b20;color:#e8f7e8;padding:12px 16px;border-radius:11px;font-weight:700}
+.secondary:hover{border-color:var(--green)}
+footer{max-width:700px;margin:0 auto;padding:20px 25px 35px;color:#889b8b;font-size:12px;text-align:center}
+.notice{border:1px solid #334b35;background:#142117;color:#c4d9c7;border-radius:12px;padding:14px;margin-top:22px;font-size:12px;line-height:1.55}
+@media(max-width:450px){main{margin-top:26px}.service{grid-template-columns:1fr 1fr}.brand{font-size:12px}header .home{font-size:11px;padding:8px}}
+@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
+</style>
+</head>
+<body>
+<header>
+<a class="brand" href="https://jmagsappliances.tech/"><span class="mark">JMAGS</span><span>APPLIANCES<br><span style="font-weight:500;color:#a5b7aa">REPAIR SERVICES</span></span></a>
+<a class="home" href="https://jmagsappliances.tech/">Main website</a>
+</header>
+<main>
+<section id="lookupPage">
+<p class="eyebrow">Customer Service Portal</p>
+<h1>Know where your<br>repair stands.</h1>
+<p class="lede">Track your JMAGS repair job using the job order number and registered mobile number from your service record.</p>
+<div class="card">
+<div class="rowhead"><span class="dot"></span> Secure job tracking</div>
+<form id="trackForm" autocomplete="off">
+<div class="field">
+<label for="job">Job order number</label>
+<input id="job" name="job" type="text" placeholder="JO-202611-001" maxlength="40" autocapitalize="characters" spellcheck="false" required>
+<div class="hint">You can find your JO number on the JMAGS service record.</div>
+</div>
+<div class="field">
+<label for="mobile">Registered mobile number</label>
+<input id="mobile" name="mobile" type="tel" placeholder="09XXXXXXXXX" maxlength="18" autocomplete="off" inputmode="tel" required>
+<div class="hint">Use the same mobile number provided when the job was recorded.</div>
+</div>
+<p id="lookupError" class="error hidden" role="alert"></p>
+<button class="primary" id="submitBtn" type="submit">Track my repair</button>
+</form>
+<p class="smallprint">Your mobile number is used only for verification. This page does not show your home address, payment details, or technician location.</p>
+</div>
+</section>
+<section id="resultPage" class="hidden">
+<p class="eyebrow">Customer Service Portal</p>
+<h1>Repair status</h1>
+<p class="lede">Information recorded by your JMAGS service team.</p>
+<div class="card">
+<div class="statusheading">
+<span class="kicker">Current status</span>
+<span id="liveState" class="live"><span aria-hidden="true">● </span>Checking updates</span>
+</div>
+<div id="statusLabel" class="status-label" aria-live="polite">Checking…</div>
+<div class="statmeta"><span id="lastUpdate">Last recorded update: —</span><span aria-hidden="true">·</span><span id="lastCheck">—</span></div>
+<dl class="service">
+<div><dt>Job order</dt><dd id="jobNo">—</dd></div>
+<div><dt>JMAGS branch</dt><dd id="branch">—</dd></div>
+<div><dt>Appliance</dt><dd id="appliance">—</dd></div>
+<div><dt>Job date</dt><dd id="jobDate">—</dd></div>
+</dl>
+<h2>Service progress</h2>
+<p class="description">Typical service stages shown for orientation. They are not a technician activity log; some jobs do not require delivery.</p>
+<ol class="timeline" id="steps">
+<li data-step="1"><span class="circle">1</span>Inquiry received</li>
+<li data-step="2"><span class="circle">2</span>Visit scheduled</li>
+<li data-step="3"><span class="circle">3</span>Repair in progress</li>
+<li data-step="4"><span class="circle">4</span>For delivery (if applicable)</li>
+<li data-step="5"><span class="circle">5</span>Completed</li>
+</ol>
+<div id="liveError" class="error hidden" role="status" style="margin-top:18px"></div>
+<div class="actions">
+<button id="refreshBtn" type="button" class="secondary">Refresh now</button>
+<button id="backBtn" type="button" class="secondary">Track another job</button>
+</div>
+<div class="notice">Updates appear when JMAGS staff records changes in Operations. This page automatically checks for new information approximately every 15 seconds while open. It does not provide live GPS tracking or guaranteed arrival times.</div>
+</div>
+</section>
+</main>
+<footer>© JMAGS Appliances · <a href="https://jmagsappliances.tech/">Contact JMAGS</a></footer>
+<script>
+(function(){
+"use strict";
+var API="https://fhjarnogglakehaztbbj.supabase.co/functions/v1/jmags-customer-tracker";
+var form=document.getElementById("trackForm"),button=document.getElementById("submitBtn");
+var error=document.getElementById("lookupError"),liveError=document.getElementById("liveError");
+var session=null,timer=null,working=false, generation=0;
+function show(el,value){el.classList.toggle("hidden",!value)}
+function txt(id,v){document.getElementById(id).textContent=v||"—"}
+function time(v){if(!v)return "Not recorded";var d=new Date(v);if(isNaN(d.getTime()))return "Not recorded";return new Intl.DateTimeFormat("en-PH",{timeZone:"Asia/Manila",dateStyle:"medium",timeStyle:"short"}).format(d)}
+function statusLive(ok){var el=document.getElementById("liveState");el.classList.toggle("off",!ok);el.textContent=ok?"● Updates connected":"● Connection interrupted"}
+function render(d){
+txt("statusLabel",d.statusLabel);
+txt("jobNo",d.jobOrder);
+txt("branch",d.branch);
+txt("appliance",[(d.brand||"").trim(),(d.appliance||"").trim()].filter(Boolean).join(" "));
+txt("jobDate",d.date);
+txt("lastUpdate","Last recorded update: "+time(d.updatedAt));
+txt("lastCheck","Checked "+new Intl.DateTimeFormat("en-PH",{timeZone:"Asia/Manila",timeStyle:"short"}).format(new Date()));
+var step=Number(d.step)||0;
+Array.from(document.querySelectorAll("#steps li")).forEach(function(li){
+var s=Number(li.getAttribute("data-step"));
+li.classList.toggle("current",step===s);
+li.classList.toggle("past",step>0&&s<step);
+});
+if(d.status==="cancelled"){document.getElementById("statusLabel").textContent="Job cancelled";Array.from(document.querySelectorAll("#steps li")).forEach(function(li){li.classList.remove("current","past")})}
+statusLive(true);show(liveError,false);
+}
+function clearTimer(){if(timer)window.clearInterval(timer);timer=null}
+function reset(){
+generation++;clearTimer();session=null;working=false;
+document.getElementById("mobile").value="";
+document.getElementById("job").value="";
+show(error,false);show(liveError,false);
+show(document.getElementById("lookupPage"),true);
+show(document.getElementById("resultPage"),false);
+button.disabled=false;button.textContent="Track my repair";
+document.getElementById("job").focus();
+}
+async function request(silent){
+if(!session||working)return;
+working=true;var seq=generation;
+if(!silent){button.disabled=true;button.textContent="Checking your job…"}
+try{
+var controller=new AbortController(), timeout=window.setTimeout(function(){controller.abort()},12000);
+var result;
+try{result=await fetch(API,{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({jobOrder:session.jobOrder,mobile:session.mobile}),cache:"no-store",signal:controller.signal})}finally{window.clearTimeout(timeout)}
+var data=await result.json().catch(function(){return {}});
+if(seq!==generation)return;
+if(!result.ok)throw Object.assign(new Error(data.error||"Unable to check this job right now."),{status:result.status});
+if(!data||!data.jobOrder)throw new Error("Tracking response was incomplete.");
+render(data);
+show(document.getElementById("lookupPage"),false);show(document.getElementById("resultPage"),true);
+if(!timer)timer=window.setInterval(function(){if(!document.hidden)request(true)},15000);
+}catch(e){
+if(seq!==generation)return;
+var msg=e.name==="AbortError"?"Connection timed out. Please try again.":String(e.message||"Unable to connect. Please try again.");
+if(silent){statusLive(false);liveError.textContent=msg;show(liveError,true);if(e.status===429)clearTimer()}
+else{error.textContent=msg;show(error,true);session=null}
+}finally{if(seq===generation){working=false;button.disabled=false;button.textContent="Track my repair"}}
+}
+form.addEventListener("submit",function(e){
+e.preventDefault();show(error,false);
+var jobOrder=document.getElementById("job").value.trim().toUpperCase();
+var mobile=document.getElementById("mobile").value.trim();
+if(!/^[A-Z0-9-]{4,40}$/.test(jobOrder)){error.textContent="Enter a valid JMAGS job order number.";show(error,true);return}
+if(!/^(\+?63|0)?9[0-9]{9}$/.test(mobile.replace(/[\s-]/g,""))){error.textContent="Enter a valid Philippine mobile number.";show(error,true);return}
+generation++;clearTimer();session={jobOrder:jobOrder,mobile:mobile};request(false);
+});
+document.getElementById("refreshBtn").addEventListener("click",function(){request(true)});
+document.getElementById("backBtn").addEventListener("click",reset);
+document.addEventListener("visibilitychange",function(){if(!document.hidden&&session&&!working)request(true)});
+window.addEventListener("pagehide",function(){clearTimer();session=null;document.getElementById("mobile").value=""});
+})();
+</script>
+</body>
+</html>
