@@ -52,6 +52,12 @@ footer{max-width:700px;margin:0 auto;padding:20px 25px 35px;color:#889b8b;font-s
 .notice{border:1px solid #334b35;background:#142117;color:#c4d9c7;border-radius:12px;padding:14px;margin-top:22px;font-size:12px;line-height:1.55}
 @media(max-width:450px){main{margin-top:26px}.service{grid-template-columns:1fr 1fr}.brand{font-size:12px}header .home{font-size:11px;padding:8px}}
 @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
+
+.match-choices{display:grid;gap:10px}
+.match-option{display:block;text-align:left;width:100%;padding:14px 16px;background:#101a13;border:1px solid #415746;border-radius:13px;color:var(--fg);line-height:1.5}
+.match-option:hover,.match-option.selected{border-color:var(--green);background:#203220}
+.match-option .option-name{display:block;font-weight:800;font-size:14px}
+.match-option .option-details{display:block;color:#b1c1b2;font-size:12px;margin-top:4px}
 </style>
 </head>
 <body>
@@ -63,30 +69,35 @@ footer{max-width:700px;margin:0 auto;padding:20px 25px 35px;color:#889b8b;font-s
 <section id="lookupPage">
 <p class="eyebrow">Customer Service Portal</p>
 <h1>Know where your<br>repair stands.</h1>
-<p class="lede">Track your JMAGS repair job using the job order number and registered mobile number from your service record.</p>
+<p class="lede">Enter the same name and mobile number you used on the JMAGS online booking form. No job order number is needed.</p>
 <div class="card">
 <div class="rowhead"><span class="dot"></span> Secure job tracking</div>
 <form id="trackForm" autocomplete="off">
 <div class="field">
-<label for="job">Job order number</label>
-<input id="job" name="job" type="text" placeholder="JO-202611-001" maxlength="40" autocapitalize="characters" spellcheck="false" required>
-<div class="hint">You can find your JO number on the JMAGS service record.</div>
+<label for="customerName">Customer's registered full name</label>
+<input id="customerName" name="customerName" type="text" placeholder="Name used on the JMAGS booking form" maxlength="100" autocomplete="name" required>
+<div class="hint">Enter the name exactly as you registered it on the online booking form.</div>
 </div>
 <div class="field">
 <label for="mobile">Registered mobile number</label>
 <input id="mobile" name="mobile" type="tel" placeholder="09XXXXXXXXX" maxlength="18" autocomplete="off" inputmode="tel" required>
-<div class="hint">Use the same mobile number provided when the job was recorded.</div>
+<div class="hint">Enter the mobile number you used when filling out the Netlify booking form.</div>
 </div>
 <p id="lookupError" class="error hidden" role="alert"></p>
-<button class="primary" id="submitBtn" type="submit">Track my repair</button>
+<button class="primary" id="submitBtn" type="submit">Track my booking</button>
 </form>
-<p class="smallprint">Your mobile number is used only for verification. This page does not show your home address, payment details, or technician location.</p>
+<p class="smallprint">No job order number required. Your name and mobile number verify your booking and are not saved by this browser. We do not display addresses, payments or technician locations.</p>
 </div>
 </section>
 <section id="resultPage" class="hidden">
 <p class="eyebrow">Customer Service Portal</p>
 <h1>Repair status</h1>
 <p class="lede">Information recorded by your JMAGS service team.</p>
+<section id="matchPicker" class="card hidden" aria-label="Choose a booking" style="margin-bottom:18px">
+<h2>Choose your booking</h2>
+<p class="description">Multiple service records matched your registered name and phone number.</p>
+<div id="matchChoices" class="match-choices"></div>
+</section>
 <div class="card">
 <div class="statusheading">
 <span class="kicker">Current status</span>
@@ -98,12 +109,12 @@ footer{max-width:700px;margin:0 auto;padding:20px 25px 35px;color:#889b8b;font-s
 <div><dt>Job order</dt><dd id="jobNo">—</dd></div>
 <div><dt>JMAGS branch</dt><dd id="branch">—</dd></div>
 <div><dt>Appliance</dt><dd id="appliance">—</dd></div>
-<div><dt>Job date</dt><dd id="jobDate">—</dd></div>
+<div><dt id="dateLabel">Job date</dt><dd id="jobDate">—</dd></div>
 </dl>
 <h2>Service progress</h2>
 <p class="description">Typical service stages shown for orientation. They are not a technician activity log; some jobs do not require delivery.</p>
 <ol class="timeline" id="steps">
-<li data-step="1"><span class="circle">1</span>Inquiry received</li>
+<li data-step="1"><span class="circle">1</span>Booking / inquiry received</li>
 <li data-step="2"><span class="circle">2</span>Visit scheduled</li>
 <li data-step="3"><span class="circle">3</span>Repair in progress</li>
 <li data-step="4"><span class="circle">4</span>For delivery (if applicable)</li>
@@ -114,7 +125,7 @@ footer{max-width:700px;margin:0 auto;padding:20px 25px 35px;color:#889b8b;font-s
 <button id="refreshBtn" type="button" class="secondary">Refresh now</button>
 <button id="backBtn" type="button" class="secondary">Track another job</button>
 </div>
-<div class="notice">Updates appear when JMAGS staff records changes in Operations. This page automatically checks for new information approximately every 15 seconds while open. It does not provide live GPS tracking or guaranteed arrival times.</div>
+<div class="notice"><strong id="statusNote">JMAGS tracks your progress.</strong> Updates appear when JMAGS staff records changes in Operations. This page automatically checks for new information approximately every 15 seconds while open. It does not provide live GPS tracking or guaranteed arrival times.</div>
 </div>
 </section>
 </main>
@@ -123,75 +134,131 @@ footer{max-width:700px;margin:0 auto;padding:20px 25px 35px;color:#889b8b;font-s
 (function(){
 "use strict";
 var API="https://fhjarnogglakehaztbbj.supabase.co/functions/v1/jmags-customer-tracker";
-var form=document.getElementById("trackForm"),button=document.getElementById("submitBtn");
-var error=document.getElementById("lookupError"),liveError=document.getElementById("liveError");
-var session=null,timer=null,working=false, generation=0;
-function show(el,value){el.classList.toggle("hidden",!value)}
-function txt(id,v){document.getElementById(id).textContent=v||"—"}
-function time(v){if(!v)return "Not recorded";var d=new Date(v);if(isNaN(d.getTime()))return "Not recorded";return new Intl.DateTimeFormat("en-PH",{timeZone:"Asia/Manila",dateStyle:"medium",timeStyle:"short"}).format(d)}
-function statusLive(ok){var el=document.getElementById("liveState");el.classList.toggle("off",!ok);el.textContent=ok?"● Updates connected":"● Connection interrupted"}
-function render(d){
-txt("statusLabel",d.statusLabel);
-txt("jobNo",d.jobOrder);
-txt("branch",d.branch);
-txt("appliance",[(d.brand||"").trim(),(d.appliance||"").trim()].filter(Boolean).join(" "));
-txt("jobDate",d.date);
-txt("lastUpdate","Last recorded update: "+time(d.updatedAt));
-txt("lastCheck","Checked "+new Intl.DateTimeFormat("en-PH",{timeZone:"Asia/Manila",timeStyle:"short"}).format(new Date()));
-var step=Number(d.step)||0;
-Array.from(document.querySelectorAll("#steps li")).forEach(function(li){
-var s=Number(li.getAttribute("data-step"));
-li.classList.toggle("current",step===s);
-li.classList.toggle("past",step>0&&s<step);
-});
-if(d.status==="cancelled"){document.getElementById("statusLabel").textContent="Job cancelled";Array.from(document.querySelectorAll("#steps li")).forEach(function(li){li.classList.remove("current","past")})}
-statusLive(true);show(liveError,false);
+var form=document.getElementById("trackForm");
+var button=document.getElementById("submitBtn");
+var error=document.getElementById("lookupError");
+var liveError=document.getElementById("liveError");
+var session=null, timer=null, working=false, generation=0, matches=[], selectedId=null;
+function show(el,yes){el.classList.toggle("hidden",!yes)}
+function txt(id,v){document.getElementById(id).textContent=(v===undefined||v===null||v==="")?"—":String(v)}
+function time(v) {
+  if(!v)return "Not recorded";
+  var d=new Date(v);
+  if(isNaN(d.getTime()))return "Not recorded";
+  return new Intl.DateTimeFormat("en-PH",{timeZone:"Asia/Manila",dateStyle:"medium",timeStyle:"short"}).format(d);
+}
+function statusLive(ok){
+ var el=document.getElementById("liveState");
+ el.classList.toggle("off",!ok);
+ el.textContent=ok?"● Updates connected":"● Connection interrupted";
+}
+function render(d) {
+ txt("statusLabel",d.statusLabel);
+ txt("jobNo",d.jobOrder||"Awaiting job order");
+ txt("branch",d.branch||"Pending assignment");
+ txt("appliance",[(d.brand||"").trim(),(d.appliance||"").trim()].filter(Boolean).join(" ")||"Appliance details pending");
+ txt("jobDate",d.date);
+ txt("dateLabel",d.dateLabel||"Job date");
+ txt("statusNote",d.note||"JMAGS tracks your progress.");
+ txt("lastUpdate","Last recorded update: "+time(d.updatedAt));
+ txt("lastCheck","Checked "+new Intl.DateTimeFormat("en-PH",{timeZone:"Asia/Manila",timeStyle:"short"}).format(new Date()));
+ var step=Number(d.step)||0;
+ Array.from(document.querySelectorAll("#steps li")).forEach(function(li){
+  var s=Number(li.getAttribute("data-step"));
+  li.classList.toggle("current",step===s);
+  li.classList.toggle("past",step>0&&s<step);
+ });
+ if(d.status==="cancelled"||d.status==="booking_closed"){
+   Array.from(document.querySelectorAll("#steps li")).forEach(function(li){li.classList.remove("current","past")});
+ }
+ statusLive(true);
+ show(liveError,false);
+}
+function renderPicker(){
+ var picker=document.getElementById("matchPicker");
+ var area=document.getElementById("matchChoices");
+ area.replaceChildren();
+ show(picker,matches.length>1);
+ if(matches.length<=1)return;
+ matches.forEach(function(item){
+  var choice=document.createElement("button");
+  choice.type="button";
+  choice.className="match-option"+(item.id===selectedId?" selected":"");
+  choice.setAttribute("aria-pressed",item.id===selectedId?"true":"false");
+  var title=document.createElement("span");title.className="option-name";
+  title.textContent=[item.brand,item.appliance].filter(Boolean).join(" ") || "JMAGS booking";
+  var meta=document.createElement("span");meta.className="option-details";
+  meta.textContent=[item.statusLabel,item.date,item.jobOrder].filter(Boolean).join(" · ");
+  choice.append(title,meta);
+  choice.addEventListener("click",function(){selectedId=item.id;render(item);renderPicker()});
+  area.appendChild(choice);
+ });
 }
 function clearTimer(){if(timer)window.clearInterval(timer);timer=null}
 function reset(){
-generation++;clearTimer();session=null;working=false;
-document.getElementById("mobile").value="";
-document.getElementById("job").value="";
-show(error,false);show(liveError,false);
-show(document.getElementById("lookupPage"),true);
-show(document.getElementById("resultPage"),false);
-button.disabled=false;button.textContent="Track my repair";
-document.getElementById("job").focus();
+ generation++;clearTimer();session=null;matches=[];selectedId=null;working=false;
+ document.getElementById("mobile").value="";
+ document.getElementById("customerName").value="";
+ show(error,false);show(liveError,false);
+ show(document.getElementById("lookupPage"),true);
+ show(document.getElementById("resultPage"),false);
+ button.disabled=false;button.textContent="Track my booking";
+ document.getElementById("customerName").focus();
 }
 async function request(silent){
-if(!session||working)return;
-working=true;var seq=generation;
-if(!silent){button.disabled=true;button.textContent="Checking your job…"}
-try{
-var controller=new AbortController(), timeout=window.setTimeout(function(){controller.abort()},12000);
-var result;
-try{result=await fetch(API,{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({jobOrder:session.jobOrder,mobile:session.mobile}),cache:"no-store",signal:controller.signal})}finally{window.clearTimeout(timeout)}
-var data=await result.json().catch(function(){return {}});
-if(seq!==generation)return;
-if(!result.ok)throw Object.assign(new Error(data.error||"Unable to check this job right now."),{status:result.status});
-if(!data||!data.jobOrder)throw new Error("Tracking response was incomplete.");
-render(data);
-show(document.getElementById("lookupPage"),false);show(document.getElementById("resultPage"),true);
-if(!timer)timer=window.setInterval(function(){if(!document.hidden)request(true)},15000);
-}catch(e){
-if(seq!==generation)return;
-var msg=e.name==="AbortError"?"Connection timed out. Please try again.":String(e.message||"Unable to connect. Please try again.");
-if(silent){statusLive(false);liveError.textContent=msg;show(liveError,true);if(e.status===429)clearTimer()}
-else{error.textContent=msg;show(error,true);session=null}
-}finally{if(seq===generation){working=false;button.disabled=false;button.textContent="Track my repair"}}
+ if(!session||working)return;
+ working=true;var seq=generation;
+ if(!silent){button.disabled=true;button.textContent="Checking your booking…"}
+ try {
+  var controller=new AbortController();
+  var timeout=window.setTimeout(function(){controller.abort()},12000);
+  var result;
+  try {
+   result=await fetch(API,{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({customerName:session.customerName,mobile:session.mobile}),cache:"no-store",signal:controller.signal});
+  } finally {window.clearTimeout(timeout)}
+  var data=await result.json().catch(function(){return {}});
+  if(seq!==generation)return;
+  if(!result.ok)throw Object.assign(new Error(data.error||"Unable to check this booking right now."),{status:result.status});
+  if(!data||!Array.isArray(data.matches)||!data.matches.length)throw new Error("Tracking response was incomplete.");
+  matches=data.matches;
+  var selected=matches.find(function(x){return x.id===selectedId})||matches[0];
+  selectedId=selected.id;
+  render(selected);
+  renderPicker();
+  show(document.getElementById("lookupPage"),false);
+  show(document.getElementById("resultPage"),true);
+  if(!timer)timer=window.setInterval(function(){if(!document.hidden)request(true)},15000);
+ } catch(e) {
+  if(seq!==generation)return;
+  var msg=e.name==="AbortError"?"Connection timed out. Please try again.":String(e.message||"Unable to connect. Please try again.");
+  if(silent){
+   statusLive(false);liveError.textContent=msg;show(liveError,true);
+   if(e.status===429)clearTimer();
+  }else {
+   error.textContent=msg;show(error,true);session=null;
+  }
+ } finally {
+  if(seq===generation){working=false;button.disabled=false;button.textContent="Track my booking"}
+ }
 }
 form.addEventListener("submit",function(e){
-e.preventDefault();show(error,false);
-var jobOrder=document.getElementById("job").value.trim().toUpperCase();
-var mobile=document.getElementById("mobile").value.trim();
-if(!/^[A-Z0-9-]{4,40}$/.test(jobOrder)){error.textContent="Enter a valid JMAGS job order number.";show(error,true);return}
-if(!/^(\+?63|0)?9[0-9]{9}$/.test(mobile.replace(/[\s-]/g,""))){error.textContent="Enter a valid Philippine mobile number.";show(error,true);return}
-generation++;clearTimer();session={jobOrder:jobOrder,mobile:mobile};request(false);
+ e.preventDefault();show(error,false);
+ var customerName=document.getElementById("customerName").value.trim();
+ var mobile=document.getElementById("mobile").value.trim();
+ if(customerName.length<2||customerName.length>100){
+  error.textContent="Enter the name used on your JMAGS booking form.";show(error,true);return;
+ }
+ if(!/^(\+?63|0)?9[0-9]{9}$/.test(mobile.replace(/[\s-]/g,""))){
+  error.textContent="Enter a valid Philippine mobile number.";show(error,true);return;
+ }
+ generation++;clearTimer();selectedId=null;matches=[];
+ session={customerName:customerName,mobile:mobile};
+ request(false);
 });
 document.getElementById("refreshBtn").addEventListener("click",function(){request(true)});
 document.getElementById("backBtn").addEventListener("click",reset);
 document.addEventListener("visibilitychange",function(){if(!document.hidden&&session&&!working)request(true)});
-window.addEventListener("pagehide",function(){clearTimer();session=null;document.getElementById("mobile").value=""});
+window.addEventListener("pagehide",function(){clearTimer();session=null;document.getElementById("mobile").value="";document.getElementById("customerName").value=""});
 })();
 </script>
 </body>
