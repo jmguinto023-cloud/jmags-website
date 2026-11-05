@@ -61,6 +61,8 @@ footer{max-width:700px;margin:0 auto;padding:20px 25px 35px;color:#889b8b;font-s
 .paid-field{grid-column:1/-1;border-top:1px solid var(--line);padding-top:18px}
 .paid-field dd{font-size:clamp(22px,4.8vw,28px);letter-spacing:-.025em;color:var(--green);font-weight:850}
 .paid-field .hint{margin:7px 0 0;line-height:1.5;font-size:12px}
+.live-location-link{display:block;margin-top:16px;text-align:center;padding:13px 15px;border:1px solid #5d8061;border-radius:12px;text-decoration:none;color:#c8ffaa;background:#243927;font-weight:800;font-size:14px}
+.live-location-link:hover{border-color:#baff83;background:#2d4930}
 </style>
 </head>
 <body>
@@ -90,6 +92,8 @@ footer{max-width:700px;margin:0 auto;padding:20px 25px 35px;color:#889b8b;font-s
 <button class="primary" id="submitBtn" type="submit">Track my booking</button>
 </form>
 <p class="smallprint">No job order number required. Your name and mobile number verify your booking and are not saved by this browser. For completed jobs, we show recorded paid totals, but never addresses, payment methods or technician locations.</p>
+<a class="live-location-link" href="https://jmagsappliances.tech/live-location/">📍 Track your technician’s live location</a>
+<p class="smallprint">Your technician must turn on GPS and privately share their temporary trip link. Location is not automatically visible for every booking.</p>
 </div>
 </section>
 <section id="resultPage" class="hidden">
@@ -133,8 +137,9 @@ footer{max-width:700px;margin:0 auto;padding:20px 25px 35px;color:#889b8b;font-s
 <button id="refreshBtn" type="button" class="secondary">Refresh now</button>
 <button id="backBtn" type="button" class="secondary">Track another job</button>
 </div>
-<div class="notice"><strong id="statusNote">JMAGS tracks your progress.</strong> Updates appear when JMAGS staff records changes in Operations. This page automatically checks for new information approximately every 15 seconds while open. It does not provide live GPS tracking or guaranteed arrival times.</div>
+<div class="notice"><strong id="statusNote">JMAGS tracks your progress.</strong> Updates appear when JMAGS staff records changes in Operations. This page checks repair progress approximately every 15 seconds while open. To see GPS, open the separate private trip link supplied by your technician. No arrival time is guaranteed.</div>
 </div>
+<a class="live-location-link" href="https://jmagsappliances.tech/live-location/">📍 Track your technician’s live location</a>
 </section>
 </main>
 <footer>© JMAGS Appliances · <a href="https://jmagsappliances.tech/">Contact JMAGS</a></footer>
