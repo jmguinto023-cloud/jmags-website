@@ -32,6 +32,7 @@
 </select>
 <label for="jobRef">Job order number <span>(optional)</span></label><input id="jobRef" maxlength="65" placeholder="e.g. JO-261105-100" autocomplete="off">
 <p class="fine">To connect your location to the customer's progress screen, enter the exact job order number from JMAGS Operations.</p>
+<div id="staffRequestBanner" class="note" hidden role="status" aria-live="polite"><strong>Customer location request received.</strong> Please start sharing GPS for this job when you are travelling to the customer.</div>
 <div class="note">Location sharing is voluntary. Customer links expire after 4 hours. Anyone you send the private viewing link to can see the shared position. Stop sharing at the end of the trip.</div>
 <div id="startError" class="error" hidden role="alert"></div>
 <button type="button" class="primary wide" id="startShare">Allow GPS and start sharing</button>
@@ -43,6 +44,7 @@
 <p class="lead">Copy this unique, temporary customer link and send it through JMAGS Messenger or SMS. Your phone controls when the location updates.</p>
 <div class="panel">
 <div id="myStatus" class="status"><span class="dot"></span><span id="myStatusText">Preparing GPS</span></div>
+<div id="activeRequestBanner" class="note" hidden role="status">A customer is currently requesting a location update for this service trip.</div>
 <div class="linkbox"><strong>Private customer map link</strong><p class="url" id="shareUrl"></p></div>
 <div class="actions"><button type="button" id="copy" class="primary">Copy customer link</button><button type="button" id="share" class="secondary">Share link</button></div>
 <p id="copyMessage" class="fine" aria-live="polite"></p>

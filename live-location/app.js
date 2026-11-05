@@ -4,6 +4,7 @@ const URL="https://fhjarnogglakehaztbbj.supabase.co/functions/v1/jmags-live-tech
 const STORE="jmags_trip_share_current_tab";
 const $=id=>document.getElementById(id);
 let session=null,watchId=null,keepalive=null,pending=false,lastSent=0,latestPosition=null,viewerToken=null,viewTimer=null,loading=false,map=null,pin=null,accuracyCircle=null;
+let staffPoll=null,staffPollBusy=false;
 const show=(id,on)=>{$(id).hidden=!on};
 const text=(id,val)=>{$(id).textContent=val==null||val===""?"—":String(val)};
 const error=(id,msg)=>{text(id,msg||"");show(id,!!msg)};
@@ -32,7 +33,7 @@ function gpsError(e){
 function stopGps(){if(watchId!==null){navigator.geolocation.clearWatch(watchId);watchId=null}if(keepalive){clearInterval(keepalive);keepalive=null}}
 function customerUrl(){return "https://jmagsappliances.tech/live-location/#view="+session.viewToken}
 function updatePanel(paused){
- page("sharing");text("shareUrl",customerUrl());text("expiry",date(session.expiresAt));
+ page("sharing");startStaffRequestPoll();text("shareUrl",customerUrl());text("expiry",date(session.expiresAt));
  state("myStatus",paused?"GPS paused — select Resume GPS":"Sharing your GPS location",paused?"warn":"live");
  show("resume",paused);show("share",typeof navigator.share==="function");
 }
@@ -57,7 +58,30 @@ function startGps(){
   else if(!document.hidden)capture().then(p=>{latestPosition=p;send(p)}).catch(()=>{});
  },17000);
 }
-$("openTech").addEventListener("click",()=>{page("setup");history.replaceState(null,"",location.pathname+"#share")});
+
+async function checkStaffRequest(){
+ if(staffPollBusy)return;
+ if($("setup").hidden&&$("sharing").hidden)return;
+ var job=$("jobRef").value.trim(),kind=$("tripType").value;
+ if(!/^[a-zA-Z0-9-]{3,65}$/.test(job)){
+  show("staffRequestBanner",false);show("activeRequestBanner",false);return;
+ }
+ staffPollBusy=true;
+ try{
+  var d=await api({action:"request_status",jobReference:job,tripType:kind});
+  show("staffRequestBanner",!!d.requested);
+  show("activeRequestBanner",!!d.requested);
+ }catch(e){ /* Do not invent customer requests when offline */ }
+ finally{staffPollBusy=false}
+}
+function startStaffRequestPoll(){
+ if(staffPoll)return;
+ checkStaffRequest();
+ staffPoll=setInterval(function(){if(!document.hidden)checkStaffRequest()},12000);
+}
+$("jobRef").addEventListener("change",checkStaffRequest);
+$("tripType").addEventListener("change",checkStaffRequest);
+$("openTech").addEventListener("click",()=>{page("setup");history.replaceState(null,"",location.pathname+"#share");startStaffRequestPoll()});
 $("back").addEventListener("click",()=>{page("landing");history.replaceState(null,"",location.pathname)});
 $("startShare").addEventListener("click",async()=>{
  const btn=$("startShare");btn.disabled=true;text("startShare","Getting GPS position…");error("startError","");
@@ -86,7 +110,7 @@ $("resume").addEventListener("click",async()=>{
 $("stop").addEventListener("click",async()=>{
  if(!session)return;const btn=$("stop");btn.disabled=true;stopGps();
  try{await api({action:"stop",publishToken:session.publishToken});sessionStorage.removeItem(STORE);
- session=null;history.replaceState(null,"",location.pathname);page("landing")}
+ session=null;history.replaceState(null,"",location.pathname);page("landing");if(staffPoll){clearInterval(staffPoll);staffPoll=null}}
  catch(e){error("updateError","Could not confirm sharing stopped. Please retry: "+e.message);show("resume",true)}
  finally{btn.disabled=false}
 });
@@ -123,7 +147,7 @@ async function loadView(){
 }
 $("refresh").addEventListener("click",loadView);
 document.addEventListener("visibilitychange",()=>{if(!document.hidden&&viewerToken)loadView()});
-window.addEventListener("pagehide",()=>{stopGps();if(viewTimer)clearInterval(viewTimer)});
+window.addEventListener("pagehide",()=>{stopGps();if(viewTimer)clearInterval(viewTimer);if(staffPoll)clearInterval(staffPoll)});
 function init(){
  const hash=location.hash||"";
  if(hash.startsWith("#view=")){
@@ -137,7 +161,7 @@ function init(){
   const s=JSON.parse(saved);
   if(s.publishToken&&s.viewToken&&Date.parse(s.expiresAt)>Date.now()){session=s;updatePanel(true);return}
  }catch(_){}sessionStorage.removeItem(STORE)}
- if(hash==="#share"){page("setup");return}
+ if(hash==="#share"){page("setup");startStaffRequestPoll();return}
  page("landing");
 }
 init();
