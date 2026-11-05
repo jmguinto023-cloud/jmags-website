@@ -63,8 +63,8 @@ $("startShare").addEventListener("click",async()=>{
  const btn=$("startShare");btn.disabled=true;text("startShare","Getting GPS position…");error("startError","");
  try{
  const p=await capture();text("startShare","Creating secure link…");
- const d=await api({action:"start",technician:$("techName").value,jobReference:$("jobRef").value,...point(p)});
- session={publishToken:d.publishToken,viewToken:d.viewToken,expiresAt:d.expiresAt};
+ const d=await api({action:"start",technician:$("techName").value,jobReference:$("jobRef").value,tripType:$("tripType").value,...point(p)});
+ session={publishToken:d.publishToken,viewToken:d.viewToken,tripType:d.tripType,expiresAt:d.expiresAt};
  sessionStorage.setItem(STORE,JSON.stringify(session));
  latestPosition=p;lastSent=Date.now();updatePanel(false);text("myUpdated",date(d.updatedAt));startGps();
  }catch(e){error("startError",gpsError(e))}
