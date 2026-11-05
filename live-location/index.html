@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#101b14"><meta name="robots" content="noindex,nofollow">
+<meta name="referrer" content="no-referrer">
+<title>Live Technician Location | JMAGS Appliances</title>
+<link rel="canonical" href="https://jmagsappliances.tech/live-location/">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoT/5xwMkLNQ=" crossorigin="">
+<link rel="stylesheet" href="/live-location/style.css">
+</head>
+<body><main>
+<nav><a class="brand" href="/"><span>JMAGS</span><small>APPLIANCES · CUSTOMER CARE</small></a><a class="toplink" href="/track/">Repair tracking</a></nav>
+<section id="landing">
+<p class="eyebrow">Customer live location</p><h1>Know where your technician is.</h1>
+<p class="lead">Receive a private map link from your JMAGS technician and follow their location while they travel to your service appointment.</p>
+<div class="panel">
+<h2>Waiting for your technician?</h2><p>Ask your assigned technician to share their <strong>JMAGS live location link</strong> through your normal JMAGS customer service conversation. Open the link to view the latest location.</p>
+<div class="note">Live GPS only works when the technician voluntarily turns on location sharing. This page does not track anyone without their permission.</div>
+<div class="actions"><a href="/track/" class="btn secondary">Check my repair status</a><button type="button" id="openTech" class="primary">I'm a JMAGS technician</button></div>
+</div>
+</section>
+<section id="setup" hidden>
+<p class="eyebrow">Technician · Start a service trip</p><h1>Share your location.</h1>
+<p class="lead">Only share your position while travelling to the customer. Your phone will ask you to allow GPS access.</p>
+<div class="panel">
+<label for="techName">Technician display name</label><input id="techName" maxlength="65" value="JMAGS technician" autocomplete="off">
+<label for="jobRef">Job order number <span>(optional)</span></label><input id="jobRef" maxlength="65" placeholder="e.g. JO-261105-100" autocomplete="off">
+<div class="note">Location sharing is voluntary. Customer links expire after 4 hours. Anyone you send the private viewing link to can see the shared position. Stop sharing at the end of the trip.</div>
+<div id="startError" class="error" hidden role="alert"></div>
+<button type="button" class="primary wide" id="startShare">Allow GPS and start sharing</button>
+<div class="actions"><button type="button" class="secondary" id="back">Back</button></div>
+</div>
+</section>
+<section id="sharing" hidden>
+<p class="eyebrow">Technician · Live trip sharing</p><h1>Send the link to your customer.</h1>
+<p class="lead">Copy this unique, temporary customer link and send it through JMAGS Messenger or SMS. Your phone controls when the location updates.</p>
+<div class="panel">
+<div id="myStatus" class="status"><span class="dot"></span><span id="myStatusText">Preparing GPS</span></div>
+<div class="linkbox"><strong>Private customer map link</strong><p class="url" id="shareUrl"></p></div>
+<div class="actions"><button type="button" id="copy" class="primary">Copy customer link</button><button type="button" id="share" class="secondary">Share link</button></div>
+<p id="copyMessage" class="fine" aria-live="polite"></p>
+<div class="stats"><div><small>Last GPS update</small><strong id="myUpdated">—</strong></div><div><small>Link expires</small><strong id="expiry">—</strong></div></div>
+<div id="updateError" class="error" hidden role="alert"></div>
+<div class="actions"><button type="button" id="resume" class="secondary" hidden>Resume GPS</button><button type="button" id="stop" class="stop">Stop sharing now</button></div>
+<p class="fine">Keep this page open and allow GPS access. Locked screens and switching apps may pause updates. If GPS hasn't updated for over two minutes, customers won't see your last location.</p>
+</div>
+</section>
+<section id="customer" hidden>
+<p class="eyebrow">Customer · Private live location link</p><h1>Where is my technician?</h1>
+<p class="lead">This shows the most recent GPS reading voluntarily shared by your technician, not a guaranteed arrival time.</p>
+<div class="panel">
+<div id="viewStatus" class="status"><span class="dot"></span><span id="viewStatusText">Checking location</span></div>
+<div class="stats">
+<div><small>Technician</small><strong id="viewTech">—</strong></div>
+<div><small>Job reference</small><strong id="viewJob">—</strong></div>
+<div><small>Last updated</small><strong id="viewUpdated">—</strong></div>
+<div><small>Approx. GPS accuracy</small><strong id="viewAccuracy">—</strong></div>
+</div>
+<div id="map" hidden></div><p class="fine" id="mapInfo">Waiting for the technician's GPS signal.</p>
+<div class="actions"><a id="googleMaps" class="btn primary" href="#" target="_blank" rel="noreferrer noopener" hidden>Open in Google Maps</a><button id="refresh" class="secondary" type="button">Refresh location</button></div>
+<div id="viewError" class="error" hidden role="alert"></div>
+<div class="note">The map refreshes about every 10 seconds while the technician shares their GPS. A reading older than 2 minutes is hidden. Sharing ends when stopped or after 4 hours. Ask the technician for a new link if sharing has ended.</div>
+</div>
+<a href="/track/" class="btn secondary below">Back to repair status</a>
+</section>
+<footer>JMAGS Appliances · San Pablo and Cavite · Sharing is voluntary and time-limited.</footer>
+</main>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script src="/live-location/app.js"></script>
+</body></html>
