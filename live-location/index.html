@@ -25,7 +25,13 @@
 <p class="lead">Only share your position while travelling to the customer. Your phone will ask you to allow GPS access.</p>
 <div class="panel">
 <label for="techName">Technician display name</label><input id="techName" maxlength="65" value="JMAGS technician" autocomplete="off">
+<label for="tripType">Type of trip</label>
+<select id="tripType" aria-label="Visit or delivery">
+<option value="visit">Technician travelling for service visit</option>
+<option value="delivery">Delivery staff delivering repaired unit</option>
+</select>
 <label for="jobRef">Job order number <span>(optional)</span></label><input id="jobRef" maxlength="65" placeholder="e.g. JO-261105-100" autocomplete="off">
+<p class="fine">To connect your location to the customer's progress screen, enter the exact job order number from JMAGS Operations.</p>
 <div class="note">Location sharing is voluntary. Customer links expire after 4 hours. Anyone you send the private viewing link to can see the shared position. Stop sharing at the end of the trip.</div>
 <div id="startError" class="error" hidden role="alert"></div>
 <button type="button" class="primary wide" id="startShare">Allow GPS and start sharing</button>
