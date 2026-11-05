@@ -226,7 +226,7 @@ function configureTrip(item){
  txt("tripTitle",title);
  txt("tripAction",title);
  txt("tripHelp",kind==="delivery"?
-  "Your repaired unit is out for delivery. Tap to check whether JMAGS delivery staff is currently sharing the trip GPS.":
+  "Your unit is marked for delivery. If JMAGS delivery staff is travelling and sharing GPS, their latest position will appear here.":
   "Your JMAGS service visit is booked. Tap to check whether your assigned technician is sharing a live trip location.");
  var btn=document.getElementById("tripAction");
  btn.disabled=!isTrackable;
