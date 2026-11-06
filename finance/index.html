@@ -851,6 +851,8 @@ function liveMediaBuyerPanel(){
 }
 function ledger(){
  const rows=state.jobs.filter(x=>(state.branch==="all"||x.branch===state.branch)&&fMonth(x.job_date)&&(state.ledgerStatusFilter==="void"?x.status==="void":state.ledgerStatusFilter==="all"?["submitted","verified"].includes(x.status):x.status===state.ledgerStatusFilter)).sort((a,b)=>String(b.job_date).localeCompare(String(a.job_date)));
+ const diola=state.jobs.find(x=>String(x.job_no||"").trim()==="JO-261102-343");
+ const diolaPanel='<section class="panel"><div class="sectiontitle"><h2>Anthony Diola · JMAGS Operations</h2></div>'+(diola?table(["Job no.","Customer","Branch","Job date","Status","Collected","Source"],['<tr>'+cell(h(diola.job_no))+cell(h(diola.customer))+cell(h(diola.branch))+cell(h(diola.job_date))+cell(status(diola.status))+cell(money(diola.collected))+cell(h(diola.source))+'</tr>']):'<p class="hint">JO-261102-343 is not available to this signed-in account. Check finance table read permissions or the live connection.</p>')+'</section>';
  const recent=state.jobs.filter(x=>state.branch==="all"||x.branch===state.branch).sort((a,b)=>String(b.updated_at||b.created_at||"").localeCompare(String(a.updated_at||a.created_at||""))).slice(0,15);
  const recentPanel='<section class="panel"><div class="sectiontitle"><h2>Latest synced Operations jobs</h2></div><p class="hint">Newest finance syncs across all months, independent of the month and review filters below. Changes appear automatically when saved to the connected database.</p>'+(recent.length?table(["Job no.","Customer","Job date","Status","Collected","Last updated"],recent.map(x=>'<tr>'+cell(h(x.job_no))+cell(h(x.customer))+cell(h(x.job_date))+cell(status(x.status))+cell(money(x.collected))+cell(h(x.updated_at||x.created_at||""))+'</tr>')):'<p>No synced jobs available.</p>')+'</section>';
  const valid=rows.filter(x=>x.status==="submitted"||x.status==="verified");
@@ -875,7 +877,7 @@ function ledger(){
  const action=x.status==="submitted"&&admin()?'<button class="smallbtn" data-review-ledger="'+h(x.id)+'">Review & verify</button><button class="smallbtn" data-void-job="'+h(x.id)+'">Void</button>':"";
  return '<tr>'+cell('<strong>'+h(x.job_no)+'</strong>'+source+warning)+cell(h(x.job_date))+cell(h(x.customer))+cell(h(x.service))+cell(h(x.technician))+cell(h(x.payment_method))+cell(money(x.collected))+cell(money(x.parts_cost))+cell(money(x.driver_cost))+cell(money(x.assistant_cost))+cell(money(x.transport_cost))+cell(money(x.other_job_cost))+cell(money(x.technician_commission))+cell(money(x.direct_costs))+cell('<strong>'+money(x.contribution)+'</strong>')+cell(badge)+cell(action)+'</tr>';
  })):'<p>No jobs for this month and branch. Choose a different month above.</p>';
- return recentPanel+out+'</section>';
+ return diolaPanel+recentPanel+out+'</section>';
 }
 async function reviewAndVerifyLedger(form){
  if(!admin())throw Error("Only authorized staff can verify jobs.");
