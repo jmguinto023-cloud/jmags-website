@@ -281,7 +281,7 @@ for(const r of results){state[r.name]=r.data||[];if(r.error)errors.push(r.name+"
 render(errors);
 if(state.tab==="Ads")await loadAdHealth();
 }
-function shell(){const menus=admin()?["Overview","Jobs","Expenses","Ads","Ledger",...(role()==="owner"?["AI Media Buyer","CEO Goals"]:[])]:["Jobs"];
+function shell(){const menus=admin()?["Overview","Jobs","Expenses","Ads","Ledger",...(role()==="owner"?["AI Media Buyer"]:[])]:["Jobs"];
 return '<div class="flex"><div><h1>Finance & Operations</h1><div class="hint">One technician entry → one ledger record → verified monthly reporting.</div></div><div class="flex"><input class="filter" type="month" id="month" value="'+h(state.month)+'"><select class="filter" id="branch"><option value="all">Both branches</option><option value="san_pablo"'+(state.branch==="san_pablo"?" selected":"")+'>San Pablo</option><option value="cavite"'+(state.branch==="cavite"?" selected":"")+'>Cavite</option></select><button class="secondary" id="refresh">↻ Refresh</button></div></div><div class="panel"><nav class="nav">'+menus.map(x=>'<button data-tab="'+x+'" class="'+(state.tab===x?"active":"")+'">'+x+'</button>').join("")+'</nav></div>'}
 function render(errors){if(!state.user)return login();if(!admin()&&role()!=="tech")return check();if(!admin()&&state.tab!=="Jobs")state.tab="Jobs";let body=shell();
 if(errors?.length)body+=banner("Some records could not be read: "+h(errors.join("; ")),"bad");
@@ -292,7 +292,7 @@ if(state.tab==="Ads")body+=ads();
 if(state.tab==="AI Media Buyer"&&role()==="owner")body+=liveMediaBuyerPanel();
 if(state.tab==="Ledger")body+=ledger();
 
-if(state.tab==="CEO Goals"&&role()==="owner")body+=ceoPanel();
+
 body+='<div class="foot">Financial reports include verified jobs and expenses only. Ad figures are imported account spend and require periodic sync. Investor-supported costs are shown separately. This dashboard is not a substitute for bank reconciliation or accounting review.</div>';root.innerHTML=body;
 }
 
