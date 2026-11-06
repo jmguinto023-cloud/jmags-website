@@ -232,6 +232,21 @@ table{border-radius:12px;overflow:hidden}
 .ops-recent-list{display:grid;gap:9px;margin:12px 0}
 .ops-recent-card{padding:12px 14px;border:1px solid #d7e0e9;border-radius:11px;background:#f7fafc;overflow-wrap:anywhere}
 .ops-recent-meta{display:flex;gap:7px;flex-wrap:wrap;align-items:center;margin-top:7px;font-size:.93rem}
+
+.ops-customer-list{display:grid;gap:12px;margin:14px 0}
+.ops-customer-card{border:1px solid #dce4ed;border-radius:13px;background:#f9fbfd;padding:14px;overflow-wrap:anywhere}
+.ops-card-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap}
+.ops-card-head strong{font-size:1.04rem}
+.ops-card-value{font-weight:750;font-size:1.04rem}
+.ops-card-details{display:flex;gap:7px;flex-wrap:wrap;align-items:center;margin-top:10px;font-size:.92rem;color:#485767}
+.ops-card-actions{margin-top:12px;display:flex;flex-wrap:wrap;gap:8px}
+.ops-cost-details{margin-top:10px;color:#465667;font-size:.9rem}
+.ops-cost-details summary{cursor:pointer;font-weight:600}
+.ops-history-group{border:1px solid #dce4ed;border-radius:12px;margin:12px 0;overflow:hidden}
+.ops-history-group>summary{padding:16px;cursor:pointer;display:flex;justify-content:space-between;gap:9px;flex-wrap:wrap;align-items:center;background:#f1f5f9}
+.ops-history-group>summary span{font-size:.85rem;color:#475569}
+.ops-history-group>.ops-customer-list{padding:12px}
+@media(max-width:600px){.ops-card-head{display:block}.ops-card-value{margin-top:7px}.ops-history-group>summary{display:block}.ops-history-group>summary span{display:block;margin-top:6px}}
 </style>
 </head><body>
 <header class="top"><div><div class="logo">JMAGS <span>COMMAND CENTER</span></div><div class="small">Appliances • San Pablo & Cavite • Finance Automation</div></div><div id="identity" class="small"></div></header>
@@ -244,7 +259,7 @@ const URL_DB="https://fhjarnogglakehaztbbj.supabase.co", PUBLIC_KEY="sb_publisha
 const root=document.getElementById("root"), identity=document.getElementById("identity");
 if(!window.supabase){root.innerHTML='<div class="banner bad">Supabase client could not load. Check your connection or script blocker.</div>';return;}
 const db=window.supabase.createClient(URL_DB,PUBLIC_KEY,{auth:{persistSession:true,autoRefreshToken:true}});
-const state={user:null,profile:null,tab:"Overview",branch:"cavite",month:new Date().getDate()<=7?monthOffset(-1):monthOffset(0),jobs:[],expenses:[],ads:[],ledger:[],monthly:[],working:false,claudeQuestion:"",claudeAnswer:"",claudeMessage:"",claudeBrief:"",claudeHelpUrl:"",claudeChatMessages:[],claudeChatBusy:false,claudeChatError:"",claudeConfigured:null,claudeSetupError:"",adHealthToday:[],adHealthHistory:[],adHealthLoaded:false,adHealthLoading:false,adHealthError:"",adHealthFetchedAt:"",adHealthStrategy:[],adHealthStrategyError:"",ledgerStatusFilter:"all",ledgerDateScope:"all",ledgerReviewId:null};
+const state={user:null,profile:null,tab:"Ledger",branch:"cavite",ledgerBranch:"all",month:new Date().getDate()<=7?monthOffset(-1):monthOffset(0),jobs:[],opsJobs:[],expenses:[],ads:[],ledger:[],monthly:[],working:false,claudeQuestion:"",claudeAnswer:"",claudeMessage:"",claudeBrief:"",claudeHelpUrl:"",claudeChatMessages:[],claudeChatBusy:false,claudeChatError:"",claudeConfigured:null,claudeSetupError:"",adHealthToday:[],adHealthHistory:[],adHealthLoaded:false,adHealthLoading:false,adHealthError:"",adHealthFetchedAt:"",adHealthStrategy:[],adHealthStrategyError:"",ledgerStatusFilter:"all",ledgerDateScope:"all",ledgerReviewId:null};
 let recoveryMode=false;
 function monthOffset(n){const d=new Date(); d.setDate(1);d.setMonth(d.getMonth()+n);return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")}
 function h(v){return String(v??"").replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]})}
@@ -278,16 +293,33 @@ function login(){identity.textContent="Secure access";root.innerHTML='<section c
 function showStartupError(error){if(/auth session missing|no active session|session not found|authsessionmissing/i.test(String(error?.message||""))){state.user=null;login();return}identity.textContent="Connection needs attention";root.innerHTML='<section class="panel auth"><h1>JMAGS Command Center</h1>'+banner("The dashboard could not complete sign-in or data loading. Your records have not been changed. "+h(error?.message||"Network unavailable."),"warn")+'<p>Check your connection, then retry. If the problem continues, open this page in a private browser window.</p><button class="primary" id="retryLoad">Retry loading</button> <button class="secondary" id="signInAgain">Sign in again</button></section>'}
 function showRecovery(){identity.textContent="Reset password";root.innerHTML='<section class="panel auth"><h1>Set a new JMAGS password</h1><form id="newPasswordForm"><label>New password<input type="password" name="password" minlength="8" autocomplete="new-password" required></label><br><label>Confirm new password<input type="password" name="confirm" minlength="8" autocomplete="new-password" required></label><p id="error"></p><button class="primary" type="submit">Update password</button></form></section>'}
 
-async function load(){if(state.working)return;state.working=true;
-const q=[["jobs","jmags_finance_jobs"],["expenses","jmags_finance_expenses"],["ads","jmags_ad_spend_daily"],["ledger","jmags_finance_ledger"],["monthly","jmags_monthly_finance"]];
-const results=await Promise.all(q.map(async x=>{const {data,error}=await db.from(x[1]).select("*").limit(3000);return {name:x[0],data,error}}));
-state.working=false;const errors=[];
-for(const r of results){state[r.name]=r.data||[];if(r.error)errors.push(r.name+": "+r.error.message)}
-render(errors);
-if(state.tab==="Ads")await loadAdHealth();
+async function load(){
+ if(state.working){opsRefreshQueued=true;return;}
+ state.working=true;
+ const q=[["jobs","jmags_finance_jobs"],["opsJobs","app_docs"],["expenses","jmags_finance_expenses"],["ads","jmags_ad_spend_daily"],["ledger","jmags_finance_ledger"],["monthly","jmags_monthly_finance"]];
+ let results;
+ try{
+  results=await Promise.all(q.map(async x=>{
+   let req=db.from(x[1]).select(x[0]==="opsJobs"?"id,data,updated_at":"*").limit(3000);
+   if(x[0]==="opsJobs")req=req.eq("collection","jobs");
+   const {data,error}=await req;
+   return {name:x[0],data,error};
+  }));
+ }finally{state.working=false;}
+ const errors=[];
+ for(const r of results){state[r.name]=r.data||[];if(r.error)errors.push(r.name+": "+r.error.message)}
+ render(errors);
+ if(opsRefreshQueued){opsRefreshQueued=false;refreshOpsFinanceSoon();}
+ if(state.tab==="Ads")await loadAdHealth();
 }
-function shell(){const menus=admin()?["Overview","Jobs","Expenses","Ads","Ledger",...(role()==="owner"?["AI Media Buyer"]:[])]:["Jobs"];
-return '<div class="flex"><div><h1>Finance & Operations</h1><div class="hint">One technician entry → one ledger record → verified monthly reporting.</div></div><div class="flex"><input class="filter" type="month" id="month" value="'+h(state.month)+'"><select class="filter" id="branch"><option value="all">Both branches</option><option value="san_pablo"'+(state.branch==="san_pablo"?" selected":"")+'>San Pablo</option><option value="cavite"'+(state.branch==="cavite"?" selected":"")+'>Cavite</option></select><button class="secondary" id="refresh">↻ Refresh</button></div></div><div class="panel"><nav class="nav">'+menus.map(x=>'<button data-tab="'+x+'" class="'+(state.tab===x?"active":"")+'">'+x+'</button>').join("")+'</nav></div>'}
+function shell(){
+ const menus=admin()?["Ledger","History","Jobs","Overview","Expenses","Ads",...(role()==="owner"?["AI Media Buyer"]:[])]:["Jobs"];
+ const opsTab=state.tab==="Ledger"||state.tab==="History";
+ const branch=opsTab?state.ledgerBranch:state.branch;
+ const id=opsTab?"ledgerBranch":"branch";
+ const monthPicker=opsTab?"":'<input class="filter" type="month" id="month" value="'+h(state.month)+'">';
+ return '<div class="flex"><div><h1>Finance & Operations</h1><div class="hint">'+(opsTab?"Live Operations records · Monthly completed ledger and customer history":"One technician entry → one ledger record → verified monthly reporting.")+'</div></div><div class="flex">'+monthPicker+'<select class="filter" id="'+id+'"><option value="all"'+(branch==="all"?" selected":"")+'>Both branches</option><option value="san_pablo"'+(branch==="san_pablo"?" selected":"")+'>San Pablo</option><option value="cavite"'+(branch==="cavite"?" selected":"")+'>Cavite</option></select><button class="secondary" id="refresh">↻ Refresh</button></div></div><div class="panel"><nav class="nav">'+menus.map(x=>'<button data-tab="'+x+'" class="'+(state.tab===x?"active":"")+'">'+x+'</button>').join("")+'</nav></div>';
+}
 function render(errors){if(!state.user)return login();if(!admin()&&role()!=="tech")return check();if(!admin()&&state.tab!=="Jobs")state.tab="Jobs";let body=shell();
 if(errors?.length)body+=banner("Some records could not be read: "+h(errors.join("; ")),"bad");
 if(state.tab==="Overview")body+=overview();
@@ -296,6 +328,7 @@ if(state.tab==="Expenses")body+=expenses();
 if(state.tab==="Ads")body+=ads();
 if(state.tab==="AI Media Buyer"&&role()==="owner")body+=liveMediaBuyerPanel();
 if(state.tab==="Ledger")body+=ledger();
+if(state.tab==="History")body+=history();
 
 
 body+='<div class="foot">Financial reports include verified jobs and expenses only. Ad figures are imported account spend and require periodic sync. Investor-supported costs are shown separately. This dashboard is not a substitute for bank reconciliation or accounting review.</div>';root.innerHTML=body;
@@ -854,36 +887,84 @@ function liveMediaBuyerPanel(){
  out+='</div><p class="hint">Completed and paid jobs awaiting campaign evidence remain eligible for tracing. No payment or campaign status was changed.</p></section>';
  return out;
 }
+function opsBranch(raw){const b=String(raw||"").toLowerCase().replace(/[ _-]+/g,"");return b==="sanpablo"?"san_pablo":b==="cavite"?"cavite":String(raw||"").toLowerCase()}
+function opsMonthName(month){const d=new Date(month+"-01T12:00:00Z");return Number.isNaN(d.getTime())?month:d.toLocaleDateString("en-PH",{timeZone:"Asia/Manila",month:"long",year:"numeric"})}
+function opsRecords(){
+ const finances=new Map(state.jobs.map(x=>[String(x.job_no||"").trim(),x]));
+ const seen=new Set(),records=[];
+ for(const entry of state.opsJobs){
+  const d=entry.data||{},no=String(d.no||"").trim();
+  if(!no||seen.has(no))continue;
+  seen.add(no);
+  const f=finances.get(no)||null;
+  const stage=String(d.status||"").trim().toLowerCase();
+  const completed=stage==="done"?String(d.completedDate||d.date||f?.job_date||"").slice(0,10):"";
+  const date=completed||String(d.date||f?.job_date||"").slice(0,10);
+  records.push({job_no:no,branch:opsBranch(d.branch||f?.branch),customer:String(d.customerName||f?.customer||"Unnamed customer"),service:String(d.appliance||f?.service||""),stage,date,completed,updated_at:entry.updated_at||f?.updated_at||"",finance:f});
+ }
+ for(const f of state.jobs){
+  const no=String(f.job_no||"").trim();
+  if(!no||seen.has(no))continue;
+  seen.add(no);
+  records.push({job_no:no,branch:opsBranch(f.branch),customer:String(f.customer||"Unnamed customer"),service:String(f.service||""),stage:"finance_only",date:String(f.job_date||"").slice(0,10),completed:"",updated_at:f.updated_at||"",finance:f});
+ }
+ return records;
+}
+function matchesOpsBranch(x){return state.ledgerBranch==="all"||x.branch===state.ledgerBranch}
+function opsCard(x,allowVerify){
+ const f=x.finance;
+ const stageName=x.stage==="done"?"Completed":x.stage==="finance_only"?"Finance-only record":x.stage;
+ const financial=f?'<span class="pill '+h(f.status)+'">'+h(f.status==="submitted"?"Needs review":f.status==="verified"?"Verified":f.status==="void"?"Voided":f.status)+'</span>':'<span class="hint">Finance not linked</span>';
+ let out='<article class="ops-customer-card"><div class="ops-card-head"><div><strong>'+h(x.customer)+'</strong><div class="hint">'+h(x.job_no)+' · '+h(x.branch==="san_pablo"?"San Pablo":"Cavite")+'</div></div><div class="ops-card-value">'+(f?money(f.collected):"No finance amount")+'</div></div>';
+ out+='<div class="ops-card-details">'+h(x.date||"No date")+' · '+h(x.service)+' · '+h(stageName)+' · '+financial+'</div>';
+ if(allowVerify&&f&&f.status==="submitted"&&admin())out+='<div class="ops-card-actions"><button class="smallbtn" data-review-ledger="'+h(f.id)+'">Review & verify</button> <button class="smallbtn" data-void-job="'+h(f.id)+'">Void</button></div>';
+ if(allowVerify&&f)out+='<details class="ops-cost-details"><summary>Financial breakdown</summary><p>Parts '+money(f.parts_cost)+' · Transport '+money(f.transport_cost)+' · Technician commission '+money(f.technician_commission)+' · Total direct costs '+money(f.direct_costs)+'</p></details>';
+ return out+'</article>';
+}
 function ledger(){
- const rows=state.jobs.filter(x=>(state.branch==="all"||x.branch===state.branch)&&(state.ledgerDateScope!=="month"||fMonth(x.job_date))&&(state.ledgerStatusFilter==="void"?x.status==="void":state.ledgerStatusFilter==="all"?["submitted","verified"].includes(x.status):x.status===state.ledgerStatusFilter)).sort((a,b)=>String(b.updated_at||"").localeCompare(String(a.updated_at||""))||String(b.job_date||"").localeCompare(String(a.job_date||""))||String(b.job_no||"").localeCompare(String(a.job_no||"")));
- const diola=state.jobs.find(x=>String(x.job_no||"").trim()==="JO-261102-343");
- const diolaPanel='<section class="panel"><div class="sectiontitle"><h2>Anthony Diola · JMAGS Operations</h2></div>'+(diola?'<p><strong>'+h(diola.customer)+'</strong> · '+h(diola.job_no)+'</p><p>Job date: '+h(diola.job_date)+' · Branch: '+h(diola.branch)+' · '+status(diola.status)+'</p><p>Collected: <strong>'+money(diola.collected)+'</strong> · Source: '+h(diola.source)+'</p>':'<p class="hint">JO-261102-343 is not available to this signed-in account. Check finance table read permissions or the live connection.</p>')+'</section>';
- const recent=state.jobs.filter(x=>state.branch==="all"||x.branch===state.branch).sort((a,b)=>String(b.updated_at||"").localeCompare(String(a.updated_at||""))||String(b.job_date||"").localeCompare(String(a.job_date||""))||String(b.job_no||"").localeCompare(String(a.job_no||""))).slice(0,15);
- const recentPanel='<section class="panel"><div class="sectiontitle"><h2>Latest synced Operations jobs</h2></div><p class="hint">Newest finance updates from all months. Automatically refreshes from the connected database.</p>'+(recent.length?'<div class="ops-recent-list">'+recent.map(x=>'<div class="ops-recent-card"><div><strong>'+h(x.customer||x.job_no)+'</strong> <span class="hint">'+h(x.job_no)+'</span></div><div class="ops-recent-meta">'+h(x.job_date)+' · '+status(x.status)+' · Collected: '+money(x.collected)+'</div></div>').join("")+'</div>':'<p>No synced jobs available.</p>')+'</section>';
- const valid=rows.filter(x=>x.status==="submitted"||x.status==="verified");
- const counts={submitted:valid.filter(x=>x.status==="submitted").length,verified:valid.filter(x=>x.status==="verified").length};
+ const month=manilaToday().slice(0,7);
+ const rows=opsRecords().filter(matchesOpsBranch).filter(x=>x.stage==="done"&&x.completed.slice(0,7)===month&&x.finance?.status!=="void")
+  .sort((a,b)=>String(b.completed).localeCompare(String(a.completed))||String(b.updated_at).localeCompare(String(a.updated_at))||String(b.job_no).localeCompare(String(a.job_no)));
+ const withFinance=rows.filter(x=>x.finance);
+ const collections=withFinance.reduce((v,x)=>v+Number(x.finance.collected||0),0);
+ const verified=withFinance.filter(x=>x.finance.status==="verified").reduce((v,x)=>v+Number(x.finance.collected||0),0);
+ const pending=withFinance.filter(x=>x.finance.status==="submitted").length;
+ const missing=rows.length-withFinance.length;
  const kpi=(name,value)=>'<div class="ledger-kpi"><small>'+name+'</small><strong>'+value+'</strong></div>';
- let out='<section class="panel"><div class="sectiontitle"><h2>JMAGS Ops · Job Ledger ('+rows.length+')</h2><button class="secondary" id="exportCSV">Export CSV</button></div><p class="hint">Latest synced JMAGS Ops jobs across all dates by default. Use the date filter below to view only the selected month. Submitted records are pending verification and are not finalized monthly profit.</p>';
- out+='<div class="ledger-kpis">'+kpi("Collected",money(sum(valid,"collected")))+kpi("Technician commission",money(sum(valid,"technician_commission")))+kpi("Direct costs",money(sum(valid,"direct_costs")))+kpi("Contribution",money(sum(valid,"contribution")))+kpi("Needs review",counts.submitted)+kpi("Verified",counts.verified)+'</div>';
- out+='<label class="ledger-status-select">Job dates <select id="ledgerDateScope">' + [["all","All months - newest updates first"],["month","Selected month only"]].map(([v,label])=>'<option value="'+v+'"'+(state.ledgerDateScope===v?' selected':'')+'>'+label+'</option>').join("")+'</select></label>';
- out+='<label class="ledger-status-select">Job status <select id="ledgerStatusFilter">'+[["submitted","Needs Review"],["verified","Verified"],["void","Voided"],["all","All Active"]].map(([v,label])=>'<option value="'+v+'"'+(state.ledgerStatusFilter===v?' selected':'')+'>'+label+'</option>').join("")+'</select></label>';
- if(state.ledgerReviewId){
+ let out='<section class="panel"><div class="sectiontitle"><h2>Completed jobs · '+h(opsMonthName(month))+'</h2></div><p class="hint">Only completed jobs for this month, based on JMAGS Operations status and completion date. Previous months are under History.</p>';
+ out+='<div class="ledger-kpis">'+kpi("Completed jobs",rows.length)+kpi("Recorded collections",money(collections))+kpi("Verified collections",money(verified))+kpi("Needs review",pending)+'</div>';
+ if(missing)out+=banner(missing+' completed job(s) have no matching finance record. Payment amounts have not been assumed.',"warn");
+ if(!state.opsJobs.length&&state.jobs.length)out+=banner("Operations source is unavailable. The completed list cannot be verified; check signed-in access.","bad");
+ out+='<p class="hint">Submitted finance amounts are pending verification. Scheduled, repairing, and cancelled jobs are excluded from the completed ledger.</p>';
+  if(state.ledgerReviewId){
   const x=state.jobs.find(j=>j.id===state.ledgerReviewId&&j.status==="submitted");
   if(x&&admin()){
    const costFields=[["collected","Collected"],["parts_cost","Parts"],["driver_cost","Driver"],["assistant_cost","Assistant"],["transport_cost","Gas + toll"],["other_job_cost","Food / other"],["sales_agent_fee","Sales agent fee"],["technician_commission","Technician commission"]];
    out+='<div class="ledger-review"><h3>Review & verify · '+h(x.job_no)+'</h3><p class="hint">Save corrected costs and verify together in one database update. Verified Ops rows are protected from later automatic overwrites.</p><form id="ledgerReviewForm"><input type="hidden" name="id" value="'+h(x.id)+'"><div class="cols3">'+costFields.map(([key,label])=>input(key,label,"number",'required min="0" step="0.01" value="'+h(x[key]??0)+'"')).join("")+'</div><p><button class="primary" type="submit">Save & verify</button> <button class="secondary" type="button" id="cancelLedgerReview">Cancel</button></p></form></div>';
   }
  }
- const cols=["Job no.","Date","Customer","Service","Technician","Payment","Collected","Parts","Driver","Assistant","Transport","Other","Tech commission","Direct costs","Contribution","Status","Review"];
- out+=rows.length?table(cols,rows.map(x=>{
- const warning=(Number(x.collected)===0?'<div class="ledger-warning-red">No payment recorded in Ops</div>':"")+
- (["parts_cost","driver_cost","assistant_cost","transport_cost","other_job_cost"].every(k=>Number(x[k]||0)===0)?'<div class="ledger-warning-amber">No costs entered — commission is on full amount</div>':"");
- const badge=x.status==="submitted"?'<span class="pill submitted">Submitted – needs review</span>':x.status==="verified"?'<span class="pill verified">Verified</span>':status(x.status);
- const source=x.source==="auto_sync_ops"?'<div class="ledger-source">Auto from Ops</div>':"";
- const action=x.status==="submitted"&&admin()?'<button class="smallbtn" data-review-ledger="'+h(x.id)+'">Review & verify</button><button class="smallbtn" data-void-job="'+h(x.id)+'">Void</button>':"";
- return '<tr>'+cell('<strong>'+h(x.job_no)+'</strong>'+source+warning)+cell(h(x.job_date))+cell(h(x.customer))+cell(h(x.service))+cell(h(x.technician))+cell(h(x.payment_method))+cell(money(x.collected))+cell(money(x.parts_cost))+cell(money(x.driver_cost))+cell(money(x.assistant_cost))+cell(money(x.transport_cost))+cell(money(x.other_job_cost))+cell(money(x.technician_commission))+cell(money(x.direct_costs))+cell('<strong>'+money(x.contribution)+'</strong>')+cell(badge)+cell(action)+'</tr>';
- })):'<p>No matching jobs. Try All months, Both branches, or another job status.</p>';
- return diolaPanel+recentPanel+out+'</section>';
+
+ out+=rows.length?'<div class="ops-customer-list">'+rows.map(x=>opsCard(x,true)).join("")+'</div>':'<p>No completed jobs recorded this month for the selected branch. Check the Jobs tab for finance entries or History for older customers.</p>';
+ out+='<p><button class="secondary" data-tab="History">Previous months · History</button> <button class="secondary" data-tab="Jobs">Finance job records</button></p>';
+ return out+'</section>';
+}
+function history(){
+ const month=manilaToday().slice(0,7);
+ const past=opsRecords().filter(matchesOpsBranch).filter(x=>x.date&&x.date.slice(0,7)<month)
+  .sort((a,b)=>String(b.date).localeCompare(String(a.date))||String(a.customer).localeCompare(String(b.customer)));
+ const groups=new Map();
+ for(const x of past){const m=x.date.slice(0,7);if(!groups.has(m))groups.set(m,[]);groups.get(m).push(x)}
+ let out='<section class="panel"><div class="sectiontitle"><h2>Customer History · Previous months</h2></div><p class="hint">Earlier customers grouped by month, including job status and finance verification. No records are removed or moved out of the database.</p>';
+ if(!state.opsJobs.length&&state.jobs.length)out+=banner("Operations history could not be loaded. Only existing finance entries may be visible.","warn");
+ if(!groups.size)return out+'<p>No previous-month customers for this branch.</p></section>';
+ let i=0;
+ for(const [ym,arr] of groups){
+  const customers=new Set(arr.map(x=>x.customer.trim().toLowerCase())).size;
+  const verified=arr.reduce((v,x)=>v+(x.finance?.status==="verified"?Number(x.finance.collected||0):0),0);
+  out+='<details class="ops-history-group"'+(i++===0?' open':'')+'><summary><strong>'+h(opsMonthName(ym))+'</strong><span>'+customers+' customers · '+arr.length+' jobs · Verified '+money(verified)+'</span></summary>';
+  out+='<div class="ops-customer-list">'+arr.map(x=>opsCard(x,false)).join("")+'</div></details>';
+ }
+ return out+'</section>';
 }
 async function reviewAndVerifyLedger(form){
  if(!admin())throw Error("Only authorized staff can verify jobs.");
@@ -904,7 +985,7 @@ async function approve(table,id,newStatus){if(!admin())return;const fields={stat
 function download(){const r=currentLedger(),heads=["Date","Branch","Category","Reference","Amount","Status","Source"];const lines=[heads,...r.map(x=>[x.txn_date,x.branch,x.category,x.reference,x.amount,x.status,x.source])].map(a=>a.map(x=>'"'+String(x??"").replace(/"/g,'""')+'"').join(",")).join("\r\n");const blob=new Blob(["\uFEFF"+lines],{type:"text/csv;charset=utf-8"});const u=window.URL.createObjectURL(blob),a=document.createElement("a");a.href=u;a.download="JMAGS-Ledger-"+state.month+".csv";a.click();window.URL.revokeObjectURL(u)}
 document.addEventListener("submit",async e=>{if(!["loginForm","jobForm","expenseForm","newPasswordForm","claudeChatForm","ledgerReviewForm"].includes(e.target.id))return;e.preventDefault();const b=e.target.querySelector("button[type=submit],button.primary");if(b)b.disabled=true;try{if(e.target.id==="loginForm"){const f=new FormData(e.target),r=await db.auth.signInWithPassword({email:String(f.get("email")),password:String(f.get("password"))});if(r.error)throw r.error;await check()}else if(e.target.id==="newPasswordForm"){const f=new FormData(e.target);if(String(f.get("password"))!==String(f.get("confirm")))throw Error("Passwords do not match.");const r=await db.auth.updateUser({password:String(f.get("password"))});if(r.error)throw r.error;recoveryMode=false;toast("Password changed successfully.");await check()}else if(e.target.id==="ledgerReviewForm")await reviewAndVerifyLedger(e.target);else if(e.target.id==="claudeChatForm")await submitClaudeChat(e.target);else if(e.target.id==="jobForm")await saveJob(e.target);else await saveExpense(e.target)}catch(err){toast("Error: "+err.message);const el=document.getElementById("error");if(el)el.textContent=err.message}finally{if(b)b.disabled=false}});
 document.addEventListener("click",async e=>{const b=e.target.closest("button");if(!b)return;try{if(b.id==="signout"){await db.auth.signOut();state.user=null;login();return}if(b.id==="retryLoad"){login();check().catch(showStartupError);return}if(b.id==="signInAgain"){await db.auth.signOut();state.user=null;login();return}if(b.id==="forgotPassword"){const email=document.querySelector('#loginForm input[name="email"]')?.value?.trim();if(!email){const el=document.getElementById("error");if(el)el.textContent="Enter your email first, then click Forgot password.";return}const r=await db.auth.resetPasswordForEmail(email,{redirectTo:"https://jmagsappliances.tech/finance/"});if(r.error)throw r.error;const el=document.getElementById("error");if(el){el.style.color="#16803f";el.textContent="If this email is registered, a password-reset message will arrive. Check your inbox and spam folder."}return}if(b.dataset.claudePrompt){const texts={costs:"How can JMAGS reduce expenses without affecting repair quality?",ads:"Which Facebook ad campaigns should JMAGS investigate before increasing spend?",branch:"What are the biggest finance reporting gaps and risks for this branch?"};const area=document.getElementById("claudeChatInput");if(area){area.value=texts[b.dataset.claudePrompt]||"";area.focus()}return}if(b.id==="copyClaudePro"){await copyClaudeProBrief();return}if(b.id==="refreshAdHealth"){await loadAdHealth();return}if(b.dataset.tab){state.tab=b.dataset.tab;render();if(state.tab==="Ads")await loadAdHealth();/* Claude Pro needs no API calls or activation checks. */return}if(b.id==="mediaLiveRefresh"){liveMediaBuyer.loadedAt=0;await fetchLiveMediaBuyer();return}if(b.id==="refresh"){await load();return}if(b.id==="exportCSV"){download();return}if(b.id==="cancelLedgerReview"){state.ledgerReviewId=null;render();return}if(b.dataset.reviewLedger){state.ledgerReviewId=b.dataset.reviewLedger;render();return}for(const [key,t,st] of [["verifyJob","jmags_finance_jobs","verified"],["voidJob","jmags_finance_jobs","void"],["verifyExpense","jmags_finance_expenses","verified"],["voidExpense","jmags_finance_expenses","void"]])if(b.dataset[key]){if(st==="void"&&!confirm("Void this submission?"))return;await approve(t,b.dataset[key],st);return}}catch(err){toast(err.message)}});
-document.addEventListener("change",e=>{if(e.target.id==="ledgerDateScope"){state.ledgerDateScope=e.target.value;state.ledgerReviewId=null;render();return}if(e.target.id==="ledgerStatusFilter"){state.ledgerStatusFilter=e.target.value;state.ledgerReviewId=null;render();return}if(e.target.id==="month"){state.month=e.target.value;state.claudeAnswer="";state.claudeMessage="";state.claudeQuestion="";state.claudeBrief="";render()}if(e.target.id==="branch"){state.branch=e.target.value;state.claudeAnswer="";state.claudeMessage="";state.claudeQuestion="";state.claudeBrief="";render()}});
+document.addEventListener("change",e=>{if(e.target.id==="ledgerBranch"){state.ledgerBranch=e.target.value;render();return}if(e.target.id==="ledgerDateScope"){state.ledgerDateScope=e.target.value;state.ledgerReviewId=null;render();return}if(e.target.id==="ledgerStatusFilter"){state.ledgerStatusFilter=e.target.value;state.ledgerReviewId=null;render();return}if(e.target.id==="month"){state.month=e.target.value;state.claudeAnswer="";state.claudeMessage="";state.claudeQuestion="";state.claudeBrief="";render()}if(e.target.id==="branch"){state.branch=e.target.value;state.claudeAnswer="";state.claudeMessage="";state.claudeQuestion="";state.claudeBrief="";render()}});
 db.auth.onAuthStateChange((event,_session)=>{if(event==="PASSWORD_RECOVERY"){recoveryMode=true;showRecovery()}});login();check().catch(showStartupError);
 window.addEventListener("unhandledrejection",event=>{if(root?.textContent?.includes("Loading your secure dashboard"))showStartupError(event.reason||new Error("A service did not respond."))});
 // Realtime finance changes from JMAGS Operations. Polling is a fallback for dropped websocket events.
