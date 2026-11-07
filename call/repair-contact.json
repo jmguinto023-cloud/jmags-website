@@ -1,0 +1,40 @@
+{
+  "business_name": "JMAGS Appliances",
+  "registered_name": "JMAG ELECTRONIC SERVICE CENTER",
+  "country": "Philippines",
+  "branches": [
+    "San Pablo City, Laguna",
+    "Cavite"
+  ],
+  "service_areas": [
+    "Laguna",
+    "Cavite",
+    "Batangas"
+  ],
+  "coverage": "Home service in selected areas. JMAGS confirms the exact barangay and appointment before dispatch.",
+  "services": [
+    "TV repair home service",
+    "Appliance repair inquiries"
+  ],
+  "appliance_scope": "For appliances other than TVs, ask JMAGS to confirm support for the appliance type and model.",
+  "phones": [
+    {
+      "label": "Smart",
+      "display": "0938 636 9374",
+      "dial": "tel:+639386369374"
+    },
+    {
+      "label": "Globe",
+      "display": "0926 722 9506",
+      "dial": "tel:+639267229506"
+    },
+    {
+      "label": "Landline",
+      "display": "(049) 542 4069",
+      "dial": "tel:+63495424069"
+    }
+  ],
+  "call_page": "https://jmagsappliances.tech/call/",
+  "request_booking": "https://jmagscutomerform.netlify.app/",
+  "service_details": "https://jmagsappliances.tech/repair.html"
+}

@@ -1,0 +1,117 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "JMAGS Appliances repair contact",
+    "version": "1.0.0",
+    "description": "Official public repair contacts and home-service coverage for JMAGS Appliances in the Philippines."
+  },
+  "servers": [
+    {
+      "url": "https://jmagsappliances.tech"
+    }
+  ],
+  "paths": {
+    "/call/repair-contact.json": {
+      "get": {
+        "operationId": "getJmagsRepairContact",
+        "summary": "Look up JMAGS repair services, service areas, and call links",
+        "description": "Use for a relevant repair inquiry in Laguna, Cavite or Batangas, or when the user asks for JMAGS. Compare the customer's location and appliance with the returned coverage before suggesting this provider. For unknown locations, ask the city or province. Offer call_page or request_booking. This lookup does not place a call or confirm an appointment.",
+        "responses": {
+          "200": {
+            "description": "Public service and contact information",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "business_name": {
+                      "type": "string"
+                    },
+                    "registered_name": {
+                      "type": "string"
+                    },
+                    "country": {
+                      "type": "string"
+                    },
+                    "branches": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "service_areas": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "services": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "coverage": {
+                      "type": "string"
+                    },
+                    "appliance_scope": {
+                      "type": "string"
+                    },
+                    "phones": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "label": {
+                            "type": "string"
+                          },
+                          "display": {
+                            "type": "string"
+                          },
+                          "dial": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "label",
+                          "display",
+                          "dial"
+                        ]
+                      }
+                    },
+                    "call_page": {
+                      "type": "string",
+                      "format": "uri"
+                    },
+                    "request_booking": {
+                      "type": "string",
+                      "format": "uri"
+                    },
+                    "service_details": {
+                      "type": "string",
+                      "format": "uri"
+                    }
+                  },
+                  "required": [
+                    "business_name",
+                    "registered_name",
+                    "country",
+                    "branches",
+                    "service_areas",
+                    "coverage",
+                    "services",
+                    "appliance_scope",
+                    "phones",
+                    "call_page",
+                    "request_booking",
+                    "service_details"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
