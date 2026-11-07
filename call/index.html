@@ -5,6 +5,12 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Call JMAGS Appliances | TV &amp; Appliance Repair in Laguna, Cavite and Batangas</title>
   <meta name="description" content="Call JMAGS Appliances at 0938 636 9374 for TV and appliance repair inquiries. Home service in selected areas of Laguna, Cavite and Batangas, Philippines.">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="JMAGS Appliances">
+  <meta property="og:locale" content="en_PH">
+  <meta property="og:title" content="Call JMAGS Appliances for TV and appliance repair">
+  <meta property="og:description" content="Share the JMAGS repair hotlines with family or friends anywhere in the Philippines. Home service is available in selected areas of Laguna, Cavite and Batangas.">
+  <meta property="og:url" content="https://jmagsappliances.tech/call/">
   <meta name="theme-color" content="#1d1c4d">
   <link rel="canonical" href="https://jmagsappliances.tech/call/">
   <link rel="alternate" type="application/json" href="repair-contact.json" title="JMAGS repair contact details">
@@ -80,6 +86,7 @@
     .number small,.number strong{display:block}.number small{font-size:.82rem;font-weight:600}.number strong{font-size:clamp(1.25rem,4vw,1.55rem);letter-spacing:-.03em;font-variant-numeric:tabular-nums}
     .call-label{font-weight:700;border:1px solid var(--line);padding:.28rem .9rem;border-radius:2rem;font-size:.91rem}.primary .call-label{background:var(--mint);border-color:var(--mint);color:var(--ink)}
     .book{display:inline-block;margin:.45rem 0 0;padding:.35rem 0;text-underline-offset:4px;font-weight:650}
+    .share{margin-top:1rem;display:flex;gap:.6rem;align-items:center;flex-wrap:wrap}.share button{font:inherit;font-weight:650;cursor:pointer;background:transparent;border:1px solid #b6b7c9;border-radius:.65rem;padding:.55rem .9rem;color:var(--ink)}.share button:focus-visible{outline:3px solid #883400;outline-offset:3px}.share output{font-size:.9rem;color:var(--muted)}.share [hidden]{display:none}
     .coverage{grid-column:1/-1;border-top:1px solid var(--line);padding:1.35rem 0}.coverage p{max-width:53rem;color:var(--muted)}.coverage h2{margin-bottom:.35rem}
     @media(max-width:700px){main{grid-template-columns:1fr;gap:1.65rem}.wrap{width:min(100% - 2rem,38rem)}h1{max-width:15ch}.brand{font-size:1rem}.details{font-size:.85rem}}
   </style>
@@ -101,7 +108,41 @@
     <section class="coverage">
       <h2>Service areas</h2>
       <p>Our San Pablo City and Cavite branches handle TV repair in selected areas of Laguna, Cavite and Batangas. For other appliances, call with the type and model. Our team will confirm coverage and the schedule for your barangay.</p>
+      <div class="share">
+        <button type="button" id="share" hidden>Share call link</button>
+        <output id="share-status" aria-live="polite"></output>
+        <input id="share-url" type="url" aria-label="Call link to copy" readonly hidden>
+      </div>
     </section>
   </main>
+  <script>
+    const share = document.getElementById('share');
+    const status = document.getElementById('share-status');
+    const address = document.getElementById('share-url');
+    const url = document.querySelector('link[rel="canonical"]').href;
+    share.hidden = false;
+    share.addEventListener('click', async () => {
+      status.textContent = '';
+      address.hidden = true;
+      if (navigator.share) {
+        try {
+          await navigator.share({ title: 'Call JMAGS Appliances', url });
+          return;
+        } catch (error) {
+          if (error.name === 'AbortError') return;
+        }
+      }
+      try {
+        await navigator.clipboard.writeText(url);
+        status.textContent = 'Link copied.';
+      } catch {
+        address.value = url;
+        address.hidden = false;
+        address.focus();
+        address.select();
+        status.textContent = 'Copy the selected link.';
+      }
+    });
+  </script>
 </body>
 </html>
