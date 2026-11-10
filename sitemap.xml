@@ -1,9 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url><loc>https://jmagsappliances.tech/</loc></url>
-  <url><loc>https://jmagsappliances.tech/repair.html</loc></url>
-  <url><loc>https://jmagsappliances.tech/tv-buying-guide.html</loc></url>
-  <url><loc>https://jmagsappliances.tech/avr-for-tv.html</loc></url>
-  <url><loc>https://jmagsappliances.tech/ups-for-tv.html</loc></url>
+  <url><loc>https://jmagsappliances.tech/about.html</loc></url>
+  <url><loc>https://jmagsappliances.tech/services.html</loc></url>
+  <url><loc>https://jmagsappliances.tech/business.html</loc></url>
+  <url><loc>https://jmagsappliances.tech/gallery.html</loc></url>
+  <url><loc>https://jmagsappliances.tech/faqs.html</loc></url>
+  <url><loc>https://jmagsappliances.tech/contact.html</loc></url>
+  <url><loc>https://jmagsappliances.tech/reviews.html</loc></url>
+  <url><loc>https://jmagsappliances.tech/privacy.html</loc></url>
+  <url><loc>https://jmagsappliances.tech/terms.html</loc></url>
+  <url><loc>https://jmagsappliances.tech/products.html</loc></url>
+  <url><loc>https://jmagsappliances.tech/products/</loc></url>
+  <url><loc>https://jmagsappliances.tech/products/repair.html</loc></url>
+  <url><loc>https://jmagsappliances.tech/products/tv-buying-guide.html</loc></url>
+  <url><loc>https://jmagsappliances.tech/products/avr-for-tv.html</loc></url>
+  <url><loc>https://jmagsappliances.tech/products/ups-for-tv.html</loc></url>
   <url><loc>https://jmagsappliances.tech/call/</loc><lastmod>2026-11-07</lastmod></url>
 </urlset>
